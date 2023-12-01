@@ -1,30 +1,38 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-contract SafeSharedSecret {
-    address public safe;
+import { Ownable } from "openzeppelin-contracts/access/Ownable.sol";
 
-    modifier onlySafe {
-        require(msg.sender == safe);
-        _;
+contract SafeSharedSecret is Ownable {
+    //TODO read signers form safe
+    modifier onlySigners (msgSender) {
+
+        bool isSigner = msgSender included in signers.
+
+        require(isSigner,"onlySafeSigners");
+        _
     }
 
-    constructor(address _safe, address[] memory _signers) {
-        safe = _safe;
+    /**
+     * Constructs an accessoir that enables deriving a shared secret among all signers of a safe.
+     * Must be deployed through a safe.
+     * @param _signers Safe signers
+     */
+    //TODO read signers form safe
+    constructor( address[] memory _signers) Ownable(msg.sender) {
+        // safe = _safe;
+
+    }
+
+    /**
+     * Clears existing storage entries and initializes a new set of signers.
+     * @param _signers Updated set of safe signers
+     */
+    function reconstruct(address[] calldata _signers) external onlyOwner {
         
     }
 
-    function reconstruct(address _safe, address[] calldata _signers) external onlySafe {
-        
-    }
+    function submit(uint8 previous, uint256 _share) external {}
 
-    // uint256 public number;
-
-    // function setNumber(uint256 newNumber) public {
-    //     number = newNumber;
-    // }
-
-    // function increment() public {
-    //     number++;
-    // }
+    function next() external {}
 }
