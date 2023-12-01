@@ -2,15 +2,21 @@
 pragma solidity ^0.8.13;
 
 import { Ownable } from "openzeppelin-contracts/access/Ownable.sol";
+import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManager.sol";
 
 contract SafeSharedSecret is Ownable {
-    //TODO read signers form safe
-    modifier onlySigners (msgSender) {
 
-        bool isSigner = msgSender included in signers.
-
-        require(isSigner,"onlySafeSigners");
-        _
+    modifier onlySafeSigners (address _msgSender) {
+        address[] memory _signers = SafeOwnerManager(_msgSender).getOwners();
+        bool _isSigner = false;
+        for (uint256 _i = 0; _i < _signers.length - 1; _i++) {
+            if (_msgSender == _signers[_i]) {
+                _isSigner = true;
+                break;
+            }
+        }
+        require(_isSigner,"only safe signers");
+        _;
     }
 
     /**
@@ -29,10 +35,22 @@ contract SafeSharedSecret is Ownable {
      * @param _signers Updated set of safe signers
      */
     function reconstruct(address[] calldata _signers) external onlyOwner {
-        
+        //TODO
     }
 
-    function submit(uint8 previous, uint256 _share) external {}
+    /**
+     * Submits a key share.
+     * @param _previous Number of predecessors
+     * @param _share New key share
+     */
+    function submit(uint8 _previous, uint256 _share) external onlySafeSigners(msg.sender) {
+        //TODO
+    }
 
-    function next() external {}
+    /**
+     * @return _shareAndPrevious (uint256 _share,uint8 _previous)
+     */
+    function next() external onlySafeSigners(msg.sender) returns (uint256, uint8) {
+        //TODO
+    }
 }
