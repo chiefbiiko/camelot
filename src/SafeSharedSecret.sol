@@ -6,8 +6,13 @@ import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManag
 
 contract SafeSharedSecret is Ownable {
 
-    modifier onlySafeSigners () {
-        address[] memory _signers = SafeOwnerManager(_msgSender()).getOwners();
+    address public immutable safe;
+    address[] public signers;
+    /// @dev Maps from signer slot to their queue.
+    mapping(uint256 => uint256[]) public queues;
+
+    modifier onlySafeSigners() {
+        address[] memory _signers = SafeOwnerManager(safe).getOwners();
         bool _isSigner = false;
         for (uint256 _i = 0; _i < _signers.length - 1; _i++) {
             if (_msgSender() == _signers[_i]) {
@@ -24,32 +29,72 @@ contract SafeSharedSecret is Ownable {
      * Must be deployed through a safe.
      */
     constructor() Ownable(_msgSender()) {
-            address[] memory _signers = SafeOwnerManager(_msgSender()).getOwners();
-            // TODO setup signer queues
-            
+        safe = _msgSender();
+        signers = SafeOwnerManager(safe).getOwners();
     }
 
     /**
-     * Clears existing storage entries and initializes a new set of signers.
-     * @param _signers Updated set of safe signers
+     * Resets the signer set to the safe's current one.
+     * Safes must call this method whenever their signer set has changed.
      */
-    function reconstruct(address[] calldata _signers) external onlyOwner {
-        //TODO
+    function reconstruct() external onlyOwner {
+        // clear all queues of the old signer set
+        for (uint256 _i = 0; _i < signers.length - 1; _i++) {
+            delete queues[_i];
+        }
+        signers = SafeOwnerManager(safe).getOwners();
     }
 
     /**
      * Submits a key share.
-     * @param _previous Number of predecessors
+     * @param _predecessors Number of predecessors
      * @param _share New key share
      */
-    function submit(uint8 _previous, uint256 _share) external onlySafeSigners {
+    function submit(uint256 _predecessors, uint256 _share) external onlySafeSigners {
         //TODO
+        
+    }
+
+    /** TODO TODO TODO how2 handle iterator state=> write submit first now
+     * then see how to signal step state TODO TODO
+     * 
+     * Iterate all intermediate key shares to sign.
+     * @return _shareAndPrevious (uint256 _share,uint8 _predecessors)
+     */
+    function next() external view onlySafeSigners returns (uint256, uint256) {
+        uint256 _slot = sourceSlot();
+        uint256[] storage _queue = queues[_slot];
+        uint256 _share = _queue[_queue.length - 1];
+        uint256 _predecessors = _queue.length;
+        return (_share, _predecessors);
     }
 
     /**
-     * @return _shareAndPrevious (uint256 _share,uint8 _previous)
+     * Get the signer's abstract slot.
+     * A type(uint256).max return value indicates that the msg.sender is not 
+     * part of the stored signer set.
+     * @return _slot Signer slot
      */
-    function next() external onlySafeSigners returns (uint256, uint8) {
-        //TODO
+    function sourceSlot() public view returns (uint256) {
+        for (uint256 _i = 0; _i < signers.length - 1; _i++) {
+            if (_msgSender() == signers[_i]) {
+                // _isSigner = true;
+                // break;
+                return _i;
+            }
+        }
+        return type(uint256).max;
+    }
+
+    /**
+     * Get the next signer's slot doing round-robin.
+     * @return _slot Neighbor slot
+     */
+    function targetSlot(uint256 _sourceSlot) public view returns (uint256) {
+            if (_sourceSlot == signers.length - 1) {
+                return 0;
+            } else {
+                return _sourceSlot + 1;
+            }
     }
 }
