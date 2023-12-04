@@ -50,7 +50,7 @@ contract SafeSharedSecret is Ownable {
      * @param _share New key share
      */
     function submit(uint256 _predecessors, uint256 _share) external onlySafeSigners {
-        uint256 _targetSlot = targetSlot(sourceSlot());
+        uint256 _targetSlot = targetSlot(sourceSlot(_msgSender()));
         require(_targetSlot != type(uint256).max, "no such slot");
         if (queues[_targetSlot].length == _predecessors){
             queues[_targetSlot].push(_share);
@@ -64,7 +64,7 @@ contract SafeSharedSecret is Ownable {
      * @return  _status ,_share,_predecessors
      */
     function next() external view onlySafeSigners returns (Round _status, uint256 _share, uint256 _predecessors) {
-        uint256 _sourceSlot = sourceSlot();
+        uint256 _sourceSlot = sourceSlot(_msgSender());
         uint256 _targetSlot = targetSlot(_sourceSlot);
         require(_targetSlot != type(uint256).max, "no such slot");
         if (queues[_targetSlot].length == queues[_sourceSlot].length) {
@@ -80,9 +80,11 @@ contract SafeSharedSecret is Ownable {
     /**
      * Gets the seminfinal key share of a signer ready for the 
      * last modular exponentiation.
+     * @param _signer Signer address
+     * @return _share Semifinal share
      */
-    function semifinal() public view returns (uint256 _share) {
-        uint256 _sourceSlot = sourceSlot();
+    function semifinal(address _signer) public view returns (uint256 _share) {
+        uint256 _sourceSlot = sourceSlot(_signer);
         uint256[] storage _source = queues[_sourceSlot];
         require(_source.length == signers.length - 1, "semifinal share not yet available");
         return _source[_source.length - 1];
@@ -92,11 +94,12 @@ contract SafeSharedSecret is Ownable {
      * Get the signer's abstract slot.
      * A type(uint256).max return value indicates that the msg.sender is not 
      * part of the stored signer set.
+     * @param _signer Signer address
      * @return _slot Signer slot
      */
-    function sourceSlot() public view returns (uint256 _slot) {
+    function sourceSlot(address _signer) public view returns (uint256 _slot) {
         for (uint256 _i = 0; _i < signers.length - 1; _i++) {
-            if (_msgSender() == signers[_i]) {
+            if (_signer == signers[_i]) {
                 return _i;
             }
         }
