@@ -5,12 +5,15 @@ import { Ownable } from "openzeppelin-contracts/access/Ownable.sol";
 import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManager.sol";
 
 contract SafeSharedSecret is Ownable {
-    enum Round { End, Ok, Idle }
+    enum Step { End, Ok, Idle }
 
     address public immutable safe;
     address[] public signers;
     mapping(uint256 => uint256[]) public queues; // slot=>shares
 
+    /**
+     * Only allows the safe's current signer set.
+     */
     modifier onlySafeSigners() {
         address[] memory _signers = SafeOwnerManager(safe).getOwners();
         bool _isSigner = false;
@@ -59,21 +62,21 @@ contract SafeSharedSecret is Ownable {
 
     /** 
      * Iterate all intermediate key shares to sign.
-     * Round.End status 2 means there are no more prefinal rounds for given
+     * Step.End status 2 means there are no more prefinal rounds for given
      * signer.
-     * @return  _status ,_share,_predecessors
+     * @return _status ,_share,_predecessors
      */
-    function next() external view onlySafeSigners returns (Round _status, uint256 _share, uint256 _predecessors) {
+    function next() external view onlySafeSigners returns (Step _status, uint256 _share, uint256 _predecessors) {
         uint256 _sourceSlot = sourceSlot(_msgSender());
         uint256 _targetSlot = targetSlot(_sourceSlot);
         require(_targetSlot != type(uint256).max, "no such slot");
         if (queues[_targetSlot].length == queues[_sourceSlot].length) {
             uint256[] storage _source = queues[_sourceSlot];
-            return (Round.Ok, _source[_source.length - 1], _source.length);
+            return (Step.Ok, _source[_source.length - 1], _source.length);
         } else if (queues[_targetSlot].length == signers.length - 1) {
-            return (Round.End, 0, 0);
+            return (Step.End, 0, 0);
         } else {
-            return (Round.Idle, 0, 0);
+            return (Step.Idle, 0, 0);
         }
     }
 
