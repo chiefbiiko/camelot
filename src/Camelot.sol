@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import { Ownable } from "openzeppelin-contracts/access/Ownable.sol";
 import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManager.sol";
 
-contract SafeSharedSecret is Ownable {
+contract Camelot is Ownable {
     enum Step { End, Ok, Idle }
 
     address public immutable safe;
