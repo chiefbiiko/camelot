@@ -69,8 +69,8 @@ contract Camelot is Ownable {
      * signer.
      * @return _status ,_share,_predecessors
      */
-    function share() external view onlySafeSigners returns (Step _status, uint256 _predecessors, uint256 _share) {
-        uint256 _sourceSlot = sourceSlot(_msgSender());
+    function share(address _signer) external view returns (Step _status, uint256 _predecessors, uint256 _share) {
+        uint256 _sourceSlot = sourceSlot(_signer);
         uint256 _targetSlot = targetSlot(_sourceSlot);
         require(_targetSlot != type(uint256).max, "no such slot");
         uint256[] storage _source = queues[_sourceSlot];
@@ -83,18 +83,18 @@ contract Camelot is Ownable {
         }
     }
 
-    /**
-     * Gets the seminfinal key share of a signer ready for the 
-     * last modular exponentiation.
-     * @param _signer Signer address
-     * @return _share Semifinal share
-     */
-    function semifinal(address _signer) public view returns (uint256 _share) {
-        uint256 _sourceSlot = sourceSlot(_signer);
-        uint256[] storage _source = queues[_sourceSlot];
-        require(_source.length == signers.length - 1, "semifinal share not yet available");
-        return _source[_source.length - 1];
-    }
+    // /**
+    //  * Gets the seminfinal key share of a signer ready for the 
+    //  * last modular exponentiation.
+    //  * @param _signer Signer address
+    //  * @return _share Semifinal share
+    //  */
+    // function semifinal(address _signer) public view returns (uint256 _share) {
+    //     uint256 _sourceSlot = sourceSlot(_signer);
+    //     uint256[] storage _source = queues[_sourceSlot];
+    //     require(_source.length == signers.length - 1, "semifinal share not yet available");
+    //     return _source[_source.length - 1];
+    // }
 
     /**
      * Get the signer's abstract slot.

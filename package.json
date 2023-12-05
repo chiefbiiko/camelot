@@ -8,7 +8,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "prettier": "prettier --write . --config .prettierrc"
   },
   "keywords": [
     "Gnosis",
@@ -24,7 +25,11 @@
     "@nomicfoundation/hardhat-foundry": "^1.1.1",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "chai": "^4.3.10",
-    "ethers": "^6.9.0",
-    "hardhat": "^2.19.1"
+    "hardhat": "^2.19.1",
+    "prettier": "^3.1.0",
+    "prettier-plugin-solidity": "^1.2.0"
+  },
+  "dependencies": {
+    "ethers": "^6.9.0"
   }
 }
