@@ -58,8 +58,7 @@ contract Camelot is Ownable {
     function submit(uint256 _predecessors, uint256 _share) external onlySafeSigners {
         uint256 _targetSlot = targetSlot(sourceSlot(_msgSender()));
         require(_targetSlot != type(uint256).max, "no such slot");
-        //TODO add below condition to prevent overwrites
-        if (queues[_targetSlot].length == _predecessors){ // && queues[_targetSlot].length < signers.length - 1
+        if (queues[_targetSlot].length == _predecessors && queues[_targetSlot].length < signers.length - 1) {
             queues[_targetSlot].push(_share);
         }
     }
