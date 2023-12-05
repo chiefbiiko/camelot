@@ -1,10 +1,10 @@
 /** @type import('hardhat/config').HardhatUserConfig */
 
-require("@nomicfoundation/hardhat-foundry");
-require("@nomicfoundation/hardhat-ethers");
+require('@nomicfoundation/hardhat-foundry')
+require('@nomicfoundation/hardhat-ethers')
 
 module.exports = {
-  solidity: "0.8.20",
+  solidity: '0.8.20',
   settings: {
     optimizer: {
       enabled: true,
@@ -16,4 +16,4 @@ module.exports = {
       chainId: 12345
     }
   }
-};
+}

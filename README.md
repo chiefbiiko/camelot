@@ -1,4 +1,3 @@
 ## Camelot
 
 safe seed
-
