@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 import { Ownable } from "openzeppelin-contracts/access/Ownable.sol";
 import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManager.sol";
+import "forge-std/console2.sol";
 
 contract Camelot is Ownable {
     enum Step { End, Ok, Idle }
@@ -79,6 +80,9 @@ contract Camelot is Ownable {
         uint256 _targetSlot = targetSlot(_sourceSlot);
         require(_targetSlot != type(uint256).max, "no such slot");
         uint256[] storage _source = queues[_sourceSlot];
+        console2.log(">>>>>>>>> source slot", _sourceSlot);
+        console2.log(">>>>>>>>> target slot", _targetSlot);
+        console2.log(">>>>>>>>> target queue length %s",queues[_targetSlot].length);
         if (queues[_targetSlot].length == signers.length - 1) {
             return (Step.End, _source.length, _source[_source.length - 1]);
         } else if (queues[_targetSlot].length <= _source.length) {

@@ -66,13 +66,9 @@ describe('Camelot contract', function () {
     // there are always signers.length - 1 rounds prefinal rounds
     // the output of the final round is the shared secret
 
-    console.log(">>>>>>> allowed signers", await camelot23.getSigners())
-    console.log(">>>>>>> actual signers", signers.map(s => s.address))
-
     // first round
     for (const signer of signers) {
       const share = modExp(GENERATOR, await kdf(signer), PRIME)
-      console.log(">>>>> share", share)
       await camelot23.connect(signer).submit(0, share)
     }
     console.log(">>>>>>>1stround done")
@@ -81,21 +77,23 @@ describe('Camelot contract', function () {
       const [status, predecessors, share] = await camelot23.share(
         signer.address
       )
-      console.log("typeof status", typeof status)
-      console.log("typeof predecessors", typeof predecessors)
-      console.log("typeof share", typeof share)
-      // return 
       if (status !== 1n) throw Error('expected status 1 got '+status)
       const newShare = modExp(share, await kdf(signer), PRIME)
-      await camelot23.connect(signer).submit(predecessors, newShare)
+      await camelot23.connect(signer).submit(1, newShare)//(predecessors, newShare)
     }
     console.log(">>>>>>>2ndround done")
+    // console.log(">>>>>>> slot 0 queue len", await camelot23.queues(0).then(q => q.length))
+    // console.log(">>>>>>> slot 1 queue len", await camelot23.queues(1).then(q => q.length))
+    // console.log(">>>>>>> slot 2 queue len", await camelot23.queues(2).then(q => q.length))
+
+
     // final
     for (const signer of signers) {
       const [status, _predecessors, share] = await camelot23.share(
         signer.address
       )
       if (status !== 0n) throw Error('expected status 0 got '+ status)
+      else console.log(">>>>>> signer ended")
       signer.camelotSecret = modExp(share, await kdf(signer), PRIME)
     }
 
