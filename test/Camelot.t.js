@@ -3,14 +3,13 @@ const { ethers } = require("hardhat")
 const {
   loadFixture,
 } = require("@nomicfoundation/hardhat-toolbox/network-helpers")
+const {modExp} = require("../src")
+
+async function deploy(contractName, ...args) {
+  return ethers.getContractFactory(contractName).then(f => f.deploy(...args))
+}
 
 describe("Camelot contract", function () {
-  async function deploy(contractName, ...args) {
-    const factory = await ethers.getContractFactory(contractName)
-    const instance = await factory.deploy(...args)
-    return instance
-  }
-
   async function CamelotFixture() {
     const [alice, bob, charlie, dave, eve, ferdie] = await ethers.getSigners()
     const safeMock23 = await deploy("SafeMock23", [alice, bob, charlie])
@@ -58,8 +57,29 @@ describe("Camelot contract", function () {
     expect(camelot35Code.length).to.be.greaterThan(0)
   })
 
-  //WIP
+    //WIP
   //TODO submit round-robin
+  it("should do round-robin", async function () {
+    const { alice,bob,charlie, camelot23} = await loadFixture(CamelotFixture)
+   const signers =[alice,bob,charlie]
+
+    // there are always signers.length - 1 rounds prefinal rounds
+    // the output of the final round is the shared secret
+
+   // first round 
+   for (const signer of signers) {
+        
+   }
+
+   // second round
+   for (const signer of signers) {
+
+   }
+
+
+
+  })
+
   //TODO submit randomly
 
   //   it("Should increment the number correctly", async function () {
