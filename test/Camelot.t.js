@@ -1,6 +1,7 @@
 const { expect } = require("chai");
 const hre = require("hardhat");
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
+const { default: Safe, Web3Adapter } = require('@safe-global/protocol-kit')
 
 describe("Counter contract", function () {
   async function CamelotFixture() {
@@ -9,6 +10,20 @@ describe("Counter contract", function () {
 
     //TODO eploy 2/3 safe like safe-tools
     // https://ethereum.stackexchange.com/a/116791
+    const contractNetworks = {
+        [chainId]: {
+          multiSendAddress: '<MULTI_SEND_ADDRESS>',
+          safeMasterCopyAddress: '<MASTER_COPY_ADDRESS>',
+          safeProxyFactoryAddress: '<PROXY_FACTORY_ADDRESS>'
+        }
+      }
+      
+      const web3 = new Web3(window.ethereum)
+      const ethAdapter = new Web3Adapter({
+        web3,
+        signerAddress: signer.address
+      })
+      const safeFactory = await SafeFactory.create({ ethAdapter, contractNetworks })
     //TODO deploy safe CreateCaller
 
 
