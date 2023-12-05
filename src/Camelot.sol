@@ -17,7 +17,7 @@ contract Camelot is Ownable {
     modifier onlySafeSigners() {
         address[] memory _signers = SafeOwnerManager(safe).getOwners();
         bool _isSigner = false;
-        for (uint256 _i = 0; _i < _signers.length - 1; _i++) {
+        for (uint256 _i = 0; _i < _signers.length; _i++) {
             if (_msgSender() == _signers[_i]) {
                 _isSigner = true;
                 break;
@@ -49,7 +49,7 @@ contract Camelot is Ownable {
      * Safes must call this method whenever their signer set has changed.
      */
     function reconstruct() external onlyOwner {
-        for (uint256 _i = 0; _i < signers.length - 1; _i++) {
+        for (uint256 _i = 0; _i < signers.length; _i++) {
             delete queues[_i];
         }
         signers = SafeOwnerManager(safe).getOwners();
@@ -79,10 +79,10 @@ contract Camelot is Ownable {
         uint256 _targetSlot = targetSlot(_sourceSlot);
         require(_targetSlot != type(uint256).max, "no such slot");
         uint256[] storage _source = queues[_sourceSlot];
-        if (queues[_targetSlot].length == queues[_sourceSlot].length) {
-            return (Step.Ok, _source.length, _source[_source.length - 1]);
-        } else if (queues[_targetSlot].length == signers.length - 1) {
+        if (queues[_targetSlot].length == signers.length - 1) {
             return (Step.End, _source.length, _source[_source.length - 1]);
+        } else if (queues[_targetSlot].length <= _source.length) {
+            return (Step.Ok, _source.length, _source[_source.length - 1]);
         } else {
             return (Step.Idle, 0, 0);
         }
@@ -109,7 +109,7 @@ contract Camelot is Ownable {
      * @return _slot Signer slot
      */
     function sourceSlot(address _signer) public view returns (uint256 _slot) {
-        for (uint256 _i = 0; _i < signers.length - 1; _i++) {
+        for (uint256 _i = 0; _i < signers.length; _i++) {
             if (_signer == signers[_i]) {
                 return _i;
             }

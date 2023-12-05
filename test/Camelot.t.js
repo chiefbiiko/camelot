@@ -72,9 +72,10 @@ describe('Camelot contract', function () {
     // first round
     for (const signer of signers) {
       const share = modExp(GENERATOR, await kdf(signer), PRIME)
+      console.log(">>>>> share", share)
       await camelot23.connect(signer).submit(0, share)
     }
-
+    console.log(">>>>>>>1stround done")
     // second round - semifinal
     for (const signer of signers) {
       const [status, predecessors, share] = await camelot23.share(
@@ -83,18 +84,18 @@ describe('Camelot contract', function () {
       console.log("typeof status", typeof status)
       console.log("typeof predecessors", typeof predecessors)
       console.log("typeof share", typeof share)
-      return 
-      if (status !== 1) throw Error('expected status 1 got', status)
+      // return 
+      if (status !== 1n) throw Error('expected status 1 got '+status)
       const newShare = modExp(share, await kdf(signer), PRIME)
       await camelot23.connect(signer).submit(predecessors, newShare)
     }
-
+    console.log(">>>>>>>2ndround done")
     // final
     for (const signer of signers) {
       const [status, _predecessors, share] = await camelot23.share(
         signer.address
       )
-      if (status !== 0) throw Error('expected status 0 got', status)
+      if (status !== 0n) throw Error('expected status 0 got '+ status)
       signer.camelotSecret = modExp(share, await kdf(signer), PRIME)
     }
 
