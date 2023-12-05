@@ -8,7 +8,7 @@ describe("Camelot contract", function () {
   async function deploy(contractName, ...args) {
     const factory = await ethers.getContractFactory(contractName)
     const instance = await factory.deploy(...args)
-    return { contract: instance, abi: instance.interface }
+    return instance
   }
 
   async function CamelotFixture() {
@@ -22,12 +22,12 @@ describe("Camelot contract", function () {
       eve,
     ])
 
-    await safeMock23.contract.connect(alice).deployCamelot()
-    await safeMock35.contract.connect(alice).deployCamelot()
+    await safeMock23.connect(alice).deployCamelot()
+    await safeMock35.connect(alice).deployCamelot()
 
     const Camelot = await ethers.getContractFactory("Camelot")
-    const camelot23 = Camelot.attach(await safeMock23.contract.camelot())
-    const camelot35 = Camelot.attach(await safeMock35.contract.camelot())
+    const camelot23 = Camelot.attach(await safeMock23.camelot())
+    const camelot35 = Camelot.attach(await safeMock35.camelot())
 
     return {
       alice,
