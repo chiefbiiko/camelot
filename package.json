@@ -1,0 +1,26 @@
+{
+  "name": "camelot",
+  "version": "0.0.0",
+  "description": "Safe seed generated via multi-party ECDH",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "hardhat test"
+  },
+  "keywords": [
+    "Gnosis",
+    "Safe",
+    "secret",
+    "Multi-party",
+    "ECDH"
+  ],
+  "author": "chiefbiiko",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-foundry": "^1.1.1",
+    "hardhat": "^2.19.1"
+  }
+}
