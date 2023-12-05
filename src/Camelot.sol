@@ -69,13 +69,13 @@ contract Camelot is Ownable {
      * signer.
      * @return _status ,_share,_predecessors
      */
-    function next() external view onlySafeSigners returns (Step _status, uint256 _share, uint256 _predecessors) {
+    function next() external view onlySafeSigners returns (Step _status, uint256 _predecessors, uint256 _share) {
         uint256 _sourceSlot = sourceSlot(_msgSender());
         uint256 _targetSlot = targetSlot(_sourceSlot);
         require(_targetSlot != type(uint256).max, "no such slot");
         if (queues[_targetSlot].length == queues[_sourceSlot].length) {
             uint256[] storage _source = queues[_sourceSlot];
-            return (Step.Ok, _source[_source.length - 1], _source.length);
+            return (Step.Ok, _source.length, _source[_source.length - 1]);
         } else if (queues[_targetSlot].length == signers.length - 1) {
             return (Step.End, 0, 0);
         } else {
