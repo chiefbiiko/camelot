@@ -54,6 +54,9 @@ describe('Camelot contract', function () {
 
     expect(camelot23Code.length).to.be.greaterThan(0)
     expect(camelot35Code.length).to.be.greaterThan(0)
+
+    const signers23 = await camelot23.getSigners()
+    expect(signers23.length).to.be.greaterThan(0)
   })
   //WIP
   it('should do round-robin', async function () {
@@ -62,6 +65,9 @@ describe('Camelot contract', function () {
 
     // there are always signers.length - 1 rounds prefinal rounds
     // the output of the final round is the shared secret
+
+    console.log(">>>>>>> allowed signers", await camelot23.getSigners())
+    console.log(">>>>>>> actual signers", signers.map(s => s.address))
 
     // first round
     for (const signer of signers) {
@@ -74,6 +80,10 @@ describe('Camelot contract', function () {
       const [status, predecessors, share] = await camelot23.share(
         signer.address
       )
+      console.log("typeof status", typeof status)
+      console.log("typeof predecessors", typeof predecessors)
+      console.log("typeof share", typeof share)
+      return 
       if (status !== 1) throw Error('expected status 1 got', status)
       const newShare = modExp(share, await kdf(signer), PRIME)
       await camelot23.connect(signer).submit(predecessors, newShare)

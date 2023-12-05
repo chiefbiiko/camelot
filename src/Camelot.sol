@@ -27,8 +27,6 @@ contract Camelot is Ownable {
         _;
     }
 
-    event CamelotCreated(address _camelot);
-
     /**
      * Constructs an accessoir that enables deriving a shared secret among all signers of a safe.
      * Must be deployed through a safe.
@@ -36,7 +34,14 @@ contract Camelot is Ownable {
     constructor() Ownable(_msgSender()) {
         safe = _msgSender();
         signers = SafeOwnerManager(safe).getOwners();
-        emit CamelotCreated(address(this));
+    }
+
+    /**
+     * Returns a list of Safe signers.
+     * @return _signers Array of Safe signers.
+     */
+    function getSigners() public view returns (address[] memory _signers) {
+        return signers;
     }
 
     /**
