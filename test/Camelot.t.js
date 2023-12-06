@@ -59,11 +59,12 @@ describe('Camelot contract', function () {
     expect(signers23.length).to.be.greaterThan(0)
   })
   //WIP
-  it('should do round-robin', async function () {
+  it('should yield all similar shared secrets', async function () {
     const { alice, bob, charlie, camelot23 } = await loadFixture(CamelotFixture)
     const signers = [alice, bob, charlie]
 
-    async function _logQueues() {//DBG
+    async function _logQueues() {
+      //DBG
       for (let i = 0; i < signers.length; i++) {
         console.log(
           'queue',
@@ -72,7 +73,7 @@ describe('Camelot contract', function () {
           await camelot23.getQueue(i).then(q => q.length)
         )
       }
-      console.log("==================")
+      console.log('==================')
     }
 
     // there are always signers.length - 1 rounds prefinal rounds
@@ -83,10 +84,10 @@ describe('Camelot contract', function () {
       const kp = await kdf(signer)
       await camelot23.connect(signer).submit(kp.publicKey)
 
-      await _logQueues()//DBG
+      await _logQueues() //DBG
     }
     console.log('>>>>>>>1stround done')
-    await _logQueues()//DBG
+    await _logQueues() //DBG
 
     console.log('>>>>>>>2ndround begin')
     for (const signer of signers) {
@@ -96,10 +97,10 @@ describe('Camelot contract', function () {
       const newShare = scalarMult(kp.secretKey, share)
       await camelot23.connect(signer).submit(newShare) //(1, newShare)
 
-      await _logQueues()//DBG
+      await _logQueues() //DBG
     }
     console.log('>>>>>>>2ndround done')
-    await _logQueues()//DBG
+    await _logQueues() //DBG
 
     // final
     for (const signer of signers) {
@@ -108,11 +109,13 @@ describe('Camelot contract', function () {
       else console.log('>>>>>> signer ended')
 
       const kp = await kdf(signer)
-      signer.camelotSecret = scalarMult(kp.secretKey, share)
+      signer.sharedSecret = scalarMult(kp.secretKey, share)
     }
 
-    console.log('>>> camelot secrets', signers.map(s => s.camelotSecret))
-    //  expect() //TODO
+    const sharedSecrets = signers.map(s => s.sharedSecret)
+    const expected = sharedSecrets[0]
+    console.log('>>> shared secrets', sharedSecrets) //DBG
+    expect(sharedSecrets.every(s => s === expected)).to.be.true
   })
 
   //TODO submit randomly
