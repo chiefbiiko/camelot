@@ -11,6 +11,7 @@ contract Camelot is Ownable {
     address public immutable safe;
     address[] public signers;
     mapping(uint256 => uint256[]) public queues; // slot=>shares
+    address public next;
 
     /**
      * Only allows the safe's current signer set.
@@ -35,6 +36,7 @@ contract Camelot is Ownable {
     constructor() Ownable(_msgSender()) {
         safe = _msgSender();
         signers = SafeOwnerManager(safe).getOwners();
+        next = signers[0];
     }
 
     /**
@@ -59,17 +61,21 @@ contract Camelot is Ownable {
             delete queues[_i];
         }
         signers = SafeOwnerManager(safe).getOwners();
+        next = signers[0];
     }
 
-    /** TODO make this revert if its not the signer's turn - keep an internal var next
+    /**
      * Submits a key share.
      * @param _share New key share
      */
     function submit(uint256 _share) external onlySafeSigners {
-        uint256 _targetSlot = targetSlot(sourceSlot(_msgSender()));
+        require(next == _msgSender(), "not next");
+        uint256 _sourceSlot = sourceSlot(_msgSender());
+        uint256 _targetSlot = targetSlot(_sourceSlot);
         require(_targetSlot != type(uint256).max, "no such slot");
         if (queues[_targetSlot].length < signers.length - 1) {
             queues[_targetSlot].push(_share);
+            next = signers[_targetSlot];
         }
     }
 
