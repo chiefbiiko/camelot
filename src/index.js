@@ -48,6 +48,6 @@ module.exports = {
   kdf,
   scalarMult,
   // modExp,
-  PRIME,
-  GENERATOR
+  // PRIME,
+  // GENERATOR
 }
