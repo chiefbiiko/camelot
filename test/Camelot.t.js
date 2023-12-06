@@ -63,14 +63,7 @@ describe('Camelot contract', function () {
     const { alice, bob, charlie, camelot23 } = await loadFixture(CamelotFixture)
     const signers = [alice, bob, charlie]
 
-    // there are always signers.length - 1 rounds prefinal rounds
-    // the output of the final round is the shared secret
-
-    // first round
-    for (const signer of signers) {
-      const kp = await kdf(signer)
-      await camelot23.connect(signer).submit(kp.publicKey)
-
+    async function _logQueues() {//DBG
       for (let i = 0; i < signers.length; i++) {
         console.log(
           'queue',
@@ -79,18 +72,23 @@ describe('Camelot contract', function () {
           await camelot23.getQueue(i).then(q => q.length)
         )
       }
-    }
-    console.log('>>>>>>>1stround done')
-    for (let i = 0; i < signers.length; i++) {
-      console.log(
-        'queue',
-        i,
-        'length',
-        await camelot23.getQueue(i).then(q => q.length)
-      )
+      console.log("==================")
     }
 
-    // second round - semifinal
+    // there are always signers.length - 1 rounds prefinal rounds
+    // the output of the final round is the shared secret
+
+    console.log('>>>>>>>1stround begin')
+    for (const signer of signers) {
+      const kp = await kdf(signer)
+      await camelot23.connect(signer).submit(kp.publicKey)
+
+      await _logQueues()//DBG
+    }
+    console.log('>>>>>>>1stround done')
+    await _logQueues()//DBG
+
+    console.log('>>>>>>>2ndround begin')
     for (const signer of signers) {
       const [status, share] = await camelot23.share(signer.address)
       if (status !== 1n) throw Error('expected status 1 got ' + status)
@@ -98,35 +96,22 @@ describe('Camelot contract', function () {
       const newShare = scalarMult(kp.secretKey, share)
       await camelot23.connect(signer).submit(newShare) //(1, newShare)
 
-      for (let i = 0; i < signers.length; i++) {
-        console.log(
-          'queue',
-          i,
-          'length',
-          await camelot23.getQueue(i).then(q => q.length)
-        )
-      }
+      await _logQueues()//DBG
     }
     console.log('>>>>>>>2ndround done')
-    for (let i = 0; i < signers.length; i++) {
-      console.log(
-        'queue',
-        i,
-        'length',
-        await camelot23.getQueue(i).then(q => q.length)
-      ) //signers[i].length)
-    }
+    await _logQueues()//DBG
 
     // final
     for (const signer of signers) {
       const [status, share] = await camelot23.share(signer.address)
       if (status !== 0n) throw Error('expected status 0 got ' + status)
       else console.log('>>>>>> signer ended')
+
       const kp = await kdf(signer)
       signer.camelotSecret = scalarMult(kp.secretKey, share)
     }
 
-    console.log('>>> camelot secrets', ...signers.map(s => s.camelotSecret))
+    console.log('>>> camelot secrets', signers.map(s => s.camelotSecret))
     //  expect() //TODO
   })
 
