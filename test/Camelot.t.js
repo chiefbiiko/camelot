@@ -69,7 +69,7 @@ describe('Camelot contract', function () {
     // first round
     for (const signer of signers) {
       const kp = await kdf(signer)
-      await camelot23.connect(signer).submit(0, kp.publicKey)
+      await camelot23.connect(signer).submit(kp.publicKey)
 
       for (let i = 0; i < signers.length; i++) {
         console.log(
@@ -96,7 +96,7 @@ describe('Camelot contract', function () {
       if (status !== 1n) throw Error('expected status 1 got ' + status)
       const kp = await kdf(signer)
       const newShare = scalarMult(kp.secretKey, share)
-      await camelot23.connect(signer).submit(predecessors, newShare) //(1, newShare)
+      await camelot23.connect(signer).submit(newShare) //(1, newShare)
 
       for (let i = 0; i < signers.length; i++) {
         console.log(
