@@ -45,6 +45,11 @@ contract Camelot is Ownable {
         return signers;
     }
 
+    //TMP
+    function getQueue(uint256 _slot) public view returns (uint256[] memory) {
+        return queues[_slot];
+    }
+
     /**
      * Resets the signer set to the safe's current one.
      * Safes must call this method whenever their signer set has changed.
@@ -64,7 +69,7 @@ contract Camelot is Ownable {
     function submit(uint256 _predecessors, uint256 _share) external onlySafeSigners {
         uint256 _targetSlot = targetSlot(sourceSlot(_msgSender()));
         require(_targetSlot != type(uint256).max, "no such slot");
-        if (queues[_targetSlot].length == _predecessors && queues[_targetSlot].length < signers.length - 1) {
+        if (queues[_targetSlot].length < signers.length - 1) {
             queues[_targetSlot].push(_share);
         }
     }
@@ -80,9 +85,9 @@ contract Camelot is Ownable {
         uint256 _targetSlot = targetSlot(_sourceSlot);
         require(_targetSlot != type(uint256).max, "no such slot");
         uint256[] storage _source = queues[_sourceSlot];
-        console2.log(">>>>>>>>> source slot", _sourceSlot);
-        console2.log(">>>>>>>>> target slot", _targetSlot);
-        console2.log(">>>>>>>>> target queue length %s",queues[_targetSlot].length);
+        // console2.log(">>>>>>>>> source slot", _sourceSlot);
+        // console2.log(">>>>>>>>> target slot", _targetSlot);
+        // console2.log(">>>>>>>>> target queue length %s",queues[_targetSlot].length);
         if (queues[_targetSlot].length == signers.length - 1) {
             return (Step.End, _source.length, _source[_source.length - 1]);
         } else if (queues[_targetSlot].length <= _source.length) {

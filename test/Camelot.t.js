@@ -72,20 +72,28 @@ describe('Camelot contract', function () {
       await camelot23.connect(signer).submit(0, share)
     }
     console.log(">>>>>>>1stround done")
+
+    for (let i = 0; i < signers.length; i++) {
+      console.log("queue",i ,"length", await camelot23.getQueue(i).then(q => q.length))//signers[i].length)
+    }
+
     // second round - semifinal
     for (const signer of signers) {
       const [status, predecessors, share] = await camelot23.share(
         signer.address
       )
+      console.log(">> round 2 predecessors", predecessors)
       if (status !== 1n) throw Error('expected status 1 got '+status)
       const newShare = modExp(share, await kdf(signer), PRIME)
-      await camelot23.connect(signer).submit(1, newShare)//(predecessors, newShare)
+      await camelot23.connect(signer).submit(predecessors, newShare)//(1, newShare)
     }
     console.log(">>>>>>>2ndround done")
     // console.log(">>>>>>> slot 0 queue len", await camelot23.queues(0).then(q => q.length))
     // console.log(">>>>>>> slot 1 queue len", await camelot23.queues(1).then(q => q.length))
     // console.log(">>>>>>> slot 2 queue len", await camelot23.queues(2).then(q => q.length))
-
+    for (let i = 0; i < signers.length; i++) {
+      console.log("queue",i ,"length", await camelot23.getQueue(i).then(q => q.length))//signers[i].length)
+    }
 
     // final
     for (const signer of signers) {
