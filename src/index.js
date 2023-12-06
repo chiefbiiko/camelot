@@ -24,7 +24,10 @@ async function kdf(signer) {
   //   .signMessage('CAMELOT_KDF_SEED')
   //   .then(msg => BigInt(keccak256(msg)))
   const seed =await signer.signMessage('CAMELOT_KDF_SEED').then(signedMsg => Buffer.from(keccak256(signedMsg).replace("0x",""),"hex"))
-  return generateKeyPairFromSeed(seed)
+  let kp = generateKeyPairFromSeed(seed)
+  kp.publicKey = buf2bigint(kp.publicKey)
+  kp.secretKey = buf2bigint(kp.secretKey)
+  return kp
 }
 
 function scalarMult(a, b) {
@@ -47,6 +50,8 @@ function buf2bigint(b) {
 module.exports = {
   kdf,
   scalarMult,
+  bigint2buf,
+  buf2bigint
   // modExp,
   // PRIME,
   // GENERATOR

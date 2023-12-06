@@ -3,7 +3,7 @@ const { ethers } = require('hardhat')
 const {
   loadFixture
 } = require('@nomicfoundation/hardhat-toolbox/network-helpers')
-const { kdf, modExp, GENERATOR, PRIME } = require('../src')
+const { kdf, scalarMult } = require('../src')
 
 async function deploy(contractName, ...args) {
   return ethers.getContractFactory(contractName).then(f => f.deploy(...args))
@@ -68,8 +68,10 @@ describe('Camelot contract', function () {
 
     // first round
     for (const signer of signers) {
-      const share = modExp(GENERATOR, await kdf(signer), PRIME)
-      await camelot23.connect(signer).submit(0, share)
+      // const share = modExp(GENERATOR, await kdf(signer), PRIME)
+      const kp = await kdf(signer)
+      // const share = buf2bigint(kp.publicKey)
+      await camelot23.connect(signer).submit(0, kp.publicKey)
     }
     console.log(">>>>>>>1stround done")
 
@@ -84,7 +86,9 @@ describe('Camelot contract', function () {
       )
       console.log(">> round 2 predecessors", predecessors)
       if (status !== 1n) throw Error('expected status 1 got '+status)
-      const newShare = modExp(share, await kdf(signer), PRIME)
+      // const newShare = modExp(share, await kdf(signer), PRIME)
+      const kp = await kdf(signer)
+      const newShare = scalarMult(kp.secretKey, share)
       await camelot23.connect(signer).submit(predecessors, newShare)//(1, newShare)
     }
     console.log(">>>>>>>2ndround done")
@@ -102,7 +106,9 @@ describe('Camelot contract', function () {
       )
       if (status !== 0n) throw Error('expected status 0 got '+ status)
       else console.log(">>>>>> signer ended")
-      signer.camelotSecret = modExp(share, await kdf(signer), PRIME)
+      // signer.camelotSecret = modExp(share, await kdf(signer), PRIME)
+      const kp = await kdf(signer)
+      signer.camelotSecret = scalarMult(kp.secretKey, share)
     }
 
     console.log('>>> camelot secrets', ...signers.map(s => s.camelotSecret))
