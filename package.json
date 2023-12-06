@@ -30,6 +30,7 @@
     "prettier-plugin-solidity": "^1.2.0"
   },
   "dependencies": {
+    "@stablelib/x25519": "^1.0.3",
     "ethers": "^6.9.0"
   }
 }
