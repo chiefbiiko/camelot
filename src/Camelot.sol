@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import { Ownable } from "openzeppelin-contracts/access/Ownable.sol";
 import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManager.sol";
-import "forge-std/console2.sol";
+import "forge-std/console2.sol";//TMP
 
 contract Camelot is Ownable {
     enum Step { End, Ok, Idle }
@@ -61,12 +61,11 @@ contract Camelot is Ownable {
         signers = SafeOwnerManager(safe).getOwners();
     }
 
-    /**
+    /** TODO make this revert if its not the signer's turn - keep an internal var next
      * Submits a key share.
-     * @param _predecessors Number of predecessors
      * @param _share New key share
      */
-    function submit(uint256 _predecessors, uint256 _share) external onlySafeSigners {
+    function submit(uint256 _share) external onlySafeSigners {
         uint256 _targetSlot = targetSlot(sourceSlot(_msgSender()));
         require(_targetSlot != type(uint256).max, "no such slot");
         if (queues[_targetSlot].length < signers.length - 1) {
@@ -80,35 +79,19 @@ contract Camelot is Ownable {
      * signer.
      * @return _status ,_share,_predecessors
      */
-    function share(address _signer) external view returns (Step _status, uint256 _predecessors, uint256 _share) {
+    function share(address _signer) external view returns (Step _status, uint256 _share) {
         uint256 _sourceSlot = sourceSlot(_signer);
         uint256 _targetSlot = targetSlot(_sourceSlot);
         require(_targetSlot != type(uint256).max, "no such slot");
         uint256[] storage _source = queues[_sourceSlot];
-        // console2.log(">>>>>>>>> source slot", _sourceSlot);
-        // console2.log(">>>>>>>>> target slot", _targetSlot);
-        // console2.log(">>>>>>>>> target queue length %s",queues[_targetSlot].length);
         if (queues[_targetSlot].length == signers.length - 1) {
-            return (Step.End, _source.length, _source[_source.length - 1]);
+            return (Step.End, _source[_source.length - 1]);
         } else if (queues[_targetSlot].length <= _source.length) {
-            return (Step.Ok, _source.length, _source[_source.length - 1]);
+            return (Step.Ok, _source[_source.length - 1]);
         } else {
-            return (Step.Idle, 0, 0);
+            return (Step.Idle, 0);
         }
     }
-
-    // /**
-    //  * Gets the seminfinal key share of a signer ready for the 
-    //  * last modular exponentiation.
-    //  * @param _signer Signer address
-    //  * @return _share Semifinal share
-    //  */
-    // function semifinal(address _signer) public view returns (uint256 _share) {
-    //     uint256 _sourceSlot = sourceSlot(_signer);
-    //     uint256[] storage _source = queues[_sourceSlot];
-    //     require(_source.length == signers.length - 1, "semifinal share not yet available");
-    //     return _source[_source.length - 1];
-    // }
 
     /**
      * Get the signer's abstract slot.
