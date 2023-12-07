@@ -9,8 +9,8 @@ async function deploy(contractName, ...args) {
   return ethers.getContractFactory(contractName).then(f => f.deploy(...args))
 }
 
-describe('Camelot contract', function () {
-  async function CamelotFixture() {
+describe('MPX25519', function () {
+  async function MPX25519Fixture() {
     const [alice, bob, charlie, dave, eve, ferdie] = await ethers.getSigners()
     const safeMock23 = await deploy('SafeMock23', [alice, bob, charlie])
     const safeMock35 = await deploy('SafeMock35', [
@@ -21,12 +21,12 @@ describe('Camelot contract', function () {
       eve
     ])
 
-    await safeMock23.connect(alice).deployCamelot()
-    await safeMock35.connect(alice).deployCamelot()
+    await safeMock23.connect(alice).deployMPX25519()
+    await safeMock35.connect(alice).deployMPX25519()
 
-    const Camelot = await ethers.getContractFactory('Camelot')
-    const camelot23 = Camelot.attach(await safeMock23.camelot())
-    const camelot35 = Camelot.attach(await safeMock35.camelot())
+    const MPX25519 = await ethers.getContractFactory('MPX25519')
+    const camelot23 = MPX25519.attach(await safeMock23.camelot())
+    const camelot35 = MPX25519.attach(await safeMock35.camelot())
 
     return {
       alice,
@@ -42,8 +42,8 @@ describe('Camelot contract', function () {
     }
   }
 
-  it('should have deployed camelots', async function () {
-    const { camelot23, camelot35 } = await loadFixture(CamelotFixture)
+  it('should have deployed MPX25519 through Safe', async function () {
+    const { camelot23, camelot35 } = await loadFixture(MPX25519Fixture)
 
     const camelot23Code = await ethers.provider
       .getCode(await camelot23.getAddress())
@@ -60,7 +60,7 @@ describe('Camelot contract', function () {
   })
 
   it('poc', async function () {
-    const { alice, bob, charlie } = await loadFixture(CamelotFixture)
+    const { alice, bob, charlie } = await loadFixture(MPX25519Fixture)
 
     const G = new Uint8Array(32)
     G[0] = 9
@@ -91,7 +91,7 @@ describe('Camelot contract', function () {
 
   //WIP
   it('should yield all similar shared secrets - loops', async function () {
-    const { alice, bob, charlie, camelot23 } = await loadFixture(CamelotFixture)
+    const { alice, bob, charlie, camelot23 } = await loadFixture(MPX25519Fixture)
     const signers = [alice, bob, charlie]
 
     async function _logQueues() {
@@ -118,7 +118,6 @@ describe('Camelot contract', function () {
       await _logQueues() //DBG
     }
     console.log('>>>>>>>1stround done')
-    await _logQueues() //DBG
 
     console.log('>>>>>>>2ndround begin')
     for (const signer of signers) {
@@ -131,7 +130,6 @@ describe('Camelot contract', function () {
       await _logQueues() //DBG
     }
     console.log('>>>>>>>2ndround done')
-    await _logQueues() //DBG
 
     // final
     for (const signer of signers) {

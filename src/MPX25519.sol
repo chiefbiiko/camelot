@@ -5,7 +5,7 @@ import { Ownable } from "openzeppelin-contracts/access/Ownable.sol";
 import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManager.sol";
 import "forge-std/console2.sol";//TMP
 
-contract Camelot is Ownable {
+contract MPX25519 is Ownable {
     enum Step { End, Ok, Idle }
 
     address public immutable safe;

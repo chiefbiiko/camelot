@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManager.sol";
-import { Camelot } from "./Camelot.sol";
+import { MPX25519 } from "./MPX25519.sol";
 
 contract SafeMock35 is SafeOwnerManager {
     address public camelot;
@@ -13,7 +13,7 @@ contract SafeMock35 is SafeOwnerManager {
         setupOwners(_owners, 3);
     }
 
-    function deployCamelot() public {
-        camelot = address(new Camelot());
+    function deployMPX25519() public {
+        camelot = address(new MPX25519());
     }
 }
