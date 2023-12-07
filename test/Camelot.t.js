@@ -109,7 +109,7 @@ describe('Camelot contract', function () {
       else console.log('>>>>>> signer ended')
       console.log(">>> semifinal share", share)
       const kp = await kdf(signer)
-      signer.sharedSecret = scalarMult(kp.secretKey, share)
+      signer.sharedSecret ="0x"+ Buffer.from(scalarMult(kp.secretKey, share)).toString("hex")
     }
 
     const sharedSecrets = signers.map(s => s.sharedSecret)

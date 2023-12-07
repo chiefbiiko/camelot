@@ -10,7 +10,7 @@ contract Camelot is Ownable {
 
     address public immutable safe;
     address[] public signers;
-    mapping(uint256 => uint256[]) public queues; // slot=>shares
+    mapping(uint256 => bytes32[]) public queues; // slot=>shares
     address public next;
 
     /**
@@ -48,7 +48,7 @@ contract Camelot is Ownable {
     }
 
     //TMP
-    function getQueue(uint256 _slot) public view returns (uint256[] memory) {
+    function getQueue(uint256 _slot) public view returns (bytes32[] memory) {
         return queues[_slot];
     }
 
@@ -68,7 +68,7 @@ contract Camelot is Ownable {
      * Submits a key share.
      * @param _share New key share
      */
-    function submit(uint256 _share) external onlySafeSigners {
+    function submit(bytes32 _share) external onlySafeSigners {
         require(next == _msgSender(), "not next");
         uint256 _sourceSlot = sourceSlot(_msgSender());
         uint256 _targetSlot = targetSlot(_sourceSlot);
@@ -85,11 +85,11 @@ contract Camelot is Ownable {
      * signer.
      * @return _status ,_share,_predecessors
      */
-    function share(address _signer) external view returns (Step _status, uint256 _share) {
+    function share(address _signer) external view returns (Step _status, bytes32 _share) {
         uint256 _sourceSlot = sourceSlot(_signer);
         uint256 _targetSlot = targetSlot(_sourceSlot);
         require(_targetSlot != type(uint256).max, "no such slot");
-        uint256[] storage _source = queues[_sourceSlot];
+        bytes32[] storage _source = queues[_sourceSlot];
         if (queues[_targetSlot].length == signers.length - 1) {
             return (Step.End, _source[_source.length - 1]);
         } else if (queues[_targetSlot].length <= _source.length) {
