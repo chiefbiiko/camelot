@@ -107,7 +107,7 @@ describe('Camelot contract', function () {
       const [status, share] = await camelot23.share(signer.address)
       if (status !== 0n) throw Error('expected status 0 got ' + status)
       else console.log('>>>>>> signer ended')
-
+      console.log(">>> semifinal share", share)
       const kp = await kdf(signer)
       signer.sharedSecret = scalarMult(kp.secretKey, share)
     }

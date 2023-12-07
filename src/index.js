@@ -23,11 +23,12 @@ function scalarMult(a, b) {
 function bigint2buf(b) {
   let s = b.toString(16)
   if (s.length % 2 > 0) s = '0' + s
+  s += "0".repeat(64 - s.length)
   return Buffer.from(s, 'hex')
 }
 
 function buf2bigint(b) {
-  return BigInt('0x' + Buffer.from(b).toString('hex'))
+  return BigInt('0x' + Buffer.from(b).reverse().toString('hex'))
 }
 
 module.exports = {
