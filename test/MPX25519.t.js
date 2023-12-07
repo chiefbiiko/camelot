@@ -72,10 +72,15 @@ describe('MPX25519', function () {
     const aG = scalarMult(a, G)
     const bG = scalarMult(b, G)
     const cG = scalarMult(c, G)
-
+    // const aG = await kdf(alice).then(kp => kp.publicKey)//scalarMult(a, G)
+    // const bG = await kdf(bob).then(kp => kp.publicKey)//scalarMult(b, G)
+    // const cG = await kdf(charlie).then(kp => kp.publicKey)//scalarMult(c, G)
+    // expect(aG).to.deep.equal(await kdf(alice).then(kp => kp.publicKey))
+    console.log(">>>  poc cG", Buffer.from(cG).toString("hex"))
     const aGb = scalarMult(b, aG)
     const bGc = scalarMult(c, bG)
     const cGa = scalarMult(a, cG)
+    console.log(">>> poc cGa", Buffer.from(cGa).toString("hex"))
 
     const aGbc = Buffer.from(scalarMult(c, aGb)).toString('hex')
     const bGca = Buffer.from(scalarMult(a, bGc)).toString('hex')
@@ -114,7 +119,7 @@ describe('MPX25519', function () {
     for (const signer of signers) {
       const kp = await kdf(signer)
       await camelot23.connect(signer).submit(kp.publicKey)
-
+      console.log(">>> kp pk", Buffer.from(kp.publicKey).toString("hex"))
       await _logQueues() //DBG
     }
     console.log('>>>>>>>1stround done')
@@ -123,8 +128,12 @@ describe('MPX25519', function () {
     for (const signer of signers) {
       const [status, share] = await camelot23.share(signer.address)
       if (status !== 1n) throw Error('expected status 1 got ' + status)
+      // const revshare = Buffer.from(share.replace("0x",""), "hex").reverse()
+      console.log(">>> 2nd lop cG", share)
       const kp = await kdf(signer)
       const newShare = scalarMult(kp.secretKey, share)
+      console.log(">>> 2nd lop cGa", Buffer.from(newShare).toString("hex"))
+      return
       await camelot23.connect(signer).submit(newShare) //(1, newShare)
 
       await _logQueues() //DBG

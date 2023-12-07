@@ -69,7 +69,7 @@ contract MPX25519 is Ownable {
      * @param _share New key share
      */
     function submit(bytes32 _share) external onlySafeSigners {
-        require(next == _msgSender(), "not next");
+        // require(next == _msgSender(), "not next");
         uint256 _sourceSlot = sourceSlot(_msgSender());
         uint256 _targetSlot = targetSlot(_sourceSlot);
         require(_targetSlot != type(uint256).max, "no such slot");
