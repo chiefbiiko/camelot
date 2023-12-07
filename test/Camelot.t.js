@@ -56,7 +56,7 @@ describe('Camelot contract', function () {
     expect(camelot35Code.length).to.be.greaterThan(0)
 
     const signers23 = await camelot23.getSigners()
-    expect(signers23.length).to.be.greaterThan(0)
+    expect(signers23.length).to.equal(3)
   })
 
   it('poc', async function () {
@@ -81,16 +81,16 @@ describe('Camelot contract', function () {
     const bGca = Buffer.from(scalarMult(a, bGc)).toString('hex')
     const cGab = Buffer.from(scalarMult(b, cGa)).toString('hex')
 
-    console.log("charlie's shared secret", aGbc)
-    console.log("alice's shared secret", bGca)
-    console.log("bob's shared secret", cGab)
+    // console.log("charlie's shared secret", aGbc)
+    // console.log("alice's shared secret", bGca)
+    // console.log("bob's shared secret", cGab)
 
     expect(aGbc).to.equal(bGca)
     expect(bGca).to.equal(cGab)
   })
 
   //WIP
-  it.skip('should yield all similar shared secrets - loops', async function () {
+  it('should yield all similar shared secrets - loops', async function () {
     const { alice, bob, charlie, camelot23 } = await loadFixture(CamelotFixture)
     const signers = [alice, bob, charlie]
 
