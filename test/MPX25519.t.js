@@ -28,6 +28,9 @@ describe('MPX25519', function () {
     const camelot23 = MPX25519.attach(await safeMock23.camelot())
     const camelot35 = MPX25519.attach(await safeMock35.camelot())
 
+    const G = new Uint8Array(32)
+    G[0] = 9
+
     return {
       alice,
       bob,
@@ -38,7 +41,8 @@ describe('MPX25519', function () {
       safeMock23,
       safeMock35,
       camelot23,
-      camelot35
+      camelot35,
+      G
     }
   }
 
@@ -59,22 +63,28 @@ describe('MPX25519', function () {
     expect(signers23.length).to.equal(3)
   })
 
+  it('pk inspection', async function () {
+    const { alice, G } = await loadFixture(MPX25519Fixture)
+
+    const a = await kdf(alice)
+    const aG = scalarMult(a.secretKey, G)
+  
+    expect(aG).to.deep.equal(a.publicKey)
+  })
+
   it('poc', async function () {
-    const { alice, bob, charlie } = await loadFixture(MPX25519Fixture)
+    const { alice, bob, charlie, G } = await loadFixture(MPX25519Fixture)
 
-    const G = new Uint8Array(32)
-    G[0] = 9
+    const a = await kdf(alice).then(kp => kp.secretKey)
+    const b = await kdf(bob).then(kp => kp.secretKey)
+    const c = await kdf(charlie).then(kp => kp.secretKey)
 
-    const a = kdf(alice).then(kp => kp.secretKey)
-    const b = kdf(bob).then(kp => kp.secretKey)
-    const c = kdf(charlie).then(kp => kp.secretKey)
-
-    const aG = scalarMult(a, G)
-    const bG = scalarMult(b, G)
-    const cG = scalarMult(c, G)
-    // const aG = await kdf(alice).then(kp => kp.publicKey)//scalarMult(a, G)
-    // const bG = await kdf(bob).then(kp => kp.publicKey)//scalarMult(b, G)
-    // const cG = await kdf(charlie).then(kp => kp.publicKey)//scalarMult(c, G)
+    // const aG = scalarMult(a, G)
+    // const bG = scalarMult(b, G)
+    // const cG = scalarMult(c, G)
+    const aG = await kdf(alice).then(kp => kp.publicKey)//scalarMult(a, G)
+    const bG = await kdf(bob).then(kp => kp.publicKey)//scalarMult(b, G)
+    const cG = await kdf(charlie).then(kp => kp.publicKey)//scalarMult(c, G)
     // expect(aG).to.deep.equal(await kdf(alice).then(kp => kp.publicKey))
     console.log(">>>  poc cG", Buffer.from(cG).toString("hex"))
     const aGb = scalarMult(b, aG)
@@ -96,7 +106,7 @@ describe('MPX25519', function () {
 
   //WIP
   it('should yield all similar shared secrets - loops', async function () {
-    const { alice, bob, charlie, camelot23 } = await loadFixture(MPX25519Fixture)
+    const { alice, bob, charlie, camelot23, G } = await loadFixture(MPX25519Fixture)
     const signers = [alice, bob, charlie]
 
     async function _logQueues() {
@@ -118,8 +128,9 @@ describe('MPX25519', function () {
     console.log('>>>>>>>1stround begin')
     for (const signer of signers) {
       const kp = await kdf(signer)
+      // const share = scalarMult(kp.secretKey, G)
       await camelot23.connect(signer).submit(kp.publicKey)
-      console.log(">>> kp pk", Buffer.from(kp.publicKey).toString("hex"))
+      // console.log(">>> kp pk", Buffer.from(kp.publicKey).toString("hex"))
       await _logQueues() //DBG
     }
     console.log('>>>>>>>1stround done')
@@ -133,7 +144,7 @@ describe('MPX25519', function () {
       const kp = await kdf(signer)
       const newShare = scalarMult(kp.secretKey, share)
       console.log(">>> 2nd lop cGa", Buffer.from(newShare).toString("hex"))
-      return
+      // return
       await camelot23.connect(signer).submit(newShare) //(1, newShare)
 
       await _logQueues() //DBG
