@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "hardhat test",
-    "prettier": "prettier --write . --config .prettierrc"
+    "prettier": "prettier --write --plugin=prettier-plugin-solidity --config .prettierrc ./src ./test"
   },
   "keywords": [
     "Gnosis",

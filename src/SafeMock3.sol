@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.19;
 
 import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManager.sol";
