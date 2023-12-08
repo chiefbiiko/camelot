@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 /// @dev MPX25519 facilitates multi-party X25519 and MPECDH in general.
 abstract contract MPX25519 {

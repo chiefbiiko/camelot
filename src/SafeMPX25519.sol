@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 import { OwnerManager } from "safe-contracts/base/OwnerManager.sol";
 import { MPX25519 } from "./MPX25519.sol";
