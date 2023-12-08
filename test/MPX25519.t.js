@@ -13,8 +13,8 @@ function hex(b) {
   return Buffer.from(b).toString('hex')
 }
 
-function buf (s) {
-  return Buffer.from(s.replace("0x",""), "hex")
+function buf(s) {
+  return Buffer.from(s.replace('0x', ''), 'hex')
 }
 
 describe('MPX25519', function () {
@@ -88,18 +88,18 @@ describe('MPX25519', function () {
     const c = await kdf(charlie)
 
     const aG = a.publicKey
-    console.log("aG", hex(aG))
+    console.log('aG', hex(aG))
     const bG = b.publicKey
-    console.log("bG", hex(bG))
+    console.log('bG', hex(bG))
     const cG = c.publicKey
-    console.log("cG", hex(cG))
+    console.log('cG', hex(cG))
 
     const aGb = scalarMult(b.secretKey, aG)
-    console.log("aGb", hex(aGb))
+    console.log('aGb', hex(aGb))
     const bGc = scalarMult(c.secretKey, bG)
-    console.log("bGc", hex(bGc))
+    console.log('bGc', hex(bGc))
     const cGa = scalarMult(a.secretKey, cG)
-    console.log("cGa", hex(cGa))
+    console.log('cGa', hex(cGa))
 
     const aGbc = hex(scalarMult(c.secretKey, aGb))
     const bGca = hex(scalarMult(a.secretKey, bGc))
@@ -112,50 +112,50 @@ describe('MPX25519', function () {
   it('poc via contract', async function () {
     const { alice, bob, charlie, mpx255193 } =
       await loadFixture(MPX25519Fixture)
-      const signers = [alice, bob, charlie]
-      async function _logQueues() {
-        //DBG
-        for (let i = 0; i < signers.length; i++) {
-          console.log(
-            'queue',
-            i,
-            'length',
-            await mpx255193.getQueue(i).then(q => q.length)
-          )
-        }
-        console.log('==================')
+    const signers = [alice, bob, charlie]
+    async function _logQueues() {
+      //DBG
+      for (let i = 0; i < signers.length; i++) {
+        console.log(
+          'queue',
+          i,
+          'length',
+          await mpx255193.getQueue(i).then(q => q.length)
+        )
       }
+      console.log('==================')
+    }
 
     const a = await kdf(alice)
     const b = await kdf(bob)
     const c = await kdf(charlie)
 
     // const aG = a.publicKey
-    console.log("a.publicKey", hex(a.publicKey))
+    console.log('a.publicKey', hex(a.publicKey))
     await mpx255193.connect(alice).step(a.publicKey)
     await mpx255193.connect(alice).done()
     // const bG = b.publicKey
-    console.log("b.publicKey", hex(b.publicKey))
+    console.log('b.publicKey', hex(b.publicKey))
     await mpx255193.connect(bob).step(b.publicKey)
     await mpx255193.connect(bob).done()
     // const cG = c.publicKey
-    console.log("c.publicKey", hex(c.publicKey))
+    console.log('c.publicKey', hex(c.publicKey))
     await mpx255193.connect(charlie).step(c.publicKey)
     await mpx255193.connect(charlie).done()
     // await _logQueues() //DBG
     // const aGb = scalarMult(b.secretKey, aG)
     const aG = await mpx255193.prep(bob.address).then(([_, k]) => buf(k))
-    console.log("bob pulld aG", hex(aG))
+    console.log('bob pulld aG', hex(aG))
     const aGb = scalarMult(b.secretKey, aG)
-    console.log("bob comp aGb", hex(aGb))
+    console.log('bob comp aGb', hex(aGb))
     await mpx255193.connect(bob).step(aGb)
     await mpx255193.connect(bob).done()
 
     // const bGc = scalarMult(c.secretKey, bG)
     const bG = await mpx255193.prep(charlie.address).then(([_, k]) => buf(k))
-    console.log("charlie pulld bG", hex(bG))
+    console.log('charlie pulld bG', hex(bG))
     const bGc = scalarMult(c.secretKey, bG)
-    console.log("charlie comp bGc", hex(bGc))
+    console.log('charlie comp bGc', hex(bGc))
     await mpx255193.connect(charlie).step(bGc)
     await mpx255193.connect(charlie).done()
 
