@@ -11,7 +11,7 @@ contract MPX25519 is Ownable {
     address public immutable safe;
     address[] public signers;
     mapping(uint256 => bytes32[]) public queues; // slot=>shares
-    address public next;
+    mapping(uint256 => uint256) public processed; //slot=>ctr
 
     /**
      * Only allows the safe's current signer set.
@@ -36,7 +36,6 @@ contract MPX25519 is Ownable {
     constructor() Ownable(_msgSender()) {
         safe = _msgSender();
         signers = SafeOwnerManager(safe).getOwners();
-        next = signers[0];
     }
 
     /**
@@ -47,7 +46,11 @@ contract MPX25519 is Ownable {
         return signers;
     }
 
-    //TMP
+    /**
+     * Returns an internal queue. Exposed for debugging only.
+     * @param _slot Signer slot
+     * @return _signers Array of intermediate keys.
+     */
     function getQueue(uint256 _slot) public view returns (bytes32[] memory) {
         return queues[_slot];
     }
@@ -61,42 +64,51 @@ contract MPX25519 is Ownable {
             delete queues[_i];
         }
         signers = SafeOwnerManager(safe).getOwners();
-        next = signers[0];
+    }
+
+    /** 
+     * Iterate all intermediate keys to process.
+     * Step.End status 0 means there are no more steps for given signer.
+     * @param _signer Signer address
+     * @return _status ,_key
+     */
+    function prep(address _signer) external view returns (Step _status, bytes32 _key) {
+        uint256 _sourceSlot = source(_signer);
+        uint256 _targetSlot = target(_sourceSlot);
+        require(_targetSlot != type(uint256).max, "no such slot");
+        if (queues[_targetSlot].length == signers.length - 1) {
+            return (Step.End, queues[_sourceSlot][processed[_sourceSlot] - 1]);
+        } else if (queues[_targetSlot].length <= queues[_sourceSlot].length) {
+            return (Step.Ok, queues[_sourceSlot][processed[_sourceSlot] - 1]);
+        } else {
+            return (Step.Idle, 0);
+        }
     }
 
     /**
      * Submits a key share.
-     * @param _share New key share
+     * @param _key New key
      */
-    function submit(bytes32 _share) external onlySafeSigners {
-        // require(next == _msgSender(), "not next");
-        uint256 _sourceSlot = sourceSlot(_msgSender());
-        uint256 _targetSlot = targetSlot(_sourceSlot);
+    function step(bytes32 _key) external onlySafeSigners {
+        uint256 _sourceSlot = source(_msgSender());
+        uint256 _processed = processed[_sourceSlot];
+        for (uint256 _i = 0; _i < signers.length; _i++) {
+            if (_i != _sourceSlot) {
+                require(processed[_i] == _processed || processed[_i] - 1 == _processed, "previous round not yet complete");
+            }
+        }
+        uint256 _targetSlot = target(_sourceSlot);
         require(_targetSlot != type(uint256).max, "no such slot");
         if (queues[_targetSlot].length < signers.length - 1) {
-            queues[_targetSlot].push(_share);
-            next = signers[_targetSlot];
+            queues[_targetSlot].push(_key);
         }
     }
 
     /** 
-     * Iterate all intermediate key shares to sign.
-     * Step.End status 2 means there are no more prefinal rounds for given
-     * signer.
-     * @return _status ,_share,_predecessors
+     * Signals that a signer has completed a step.
      */
-    function share(address _signer) external view returns (Step _status, bytes32 _share) {
-        uint256 _sourceSlot = sourceSlot(_signer);
-        uint256 _targetSlot = targetSlot(_sourceSlot);
-        require(_targetSlot != type(uint256).max, "no such slot");
-        bytes32[] storage _source = queues[_sourceSlot];
-        if (queues[_targetSlot].length == signers.length - 1) {
-            return (Step.End, _source[_source.length - 1]);
-        } else if (queues[_targetSlot].length <= _source.length) {
-            return (Step.Ok, _source[_source.length - 1]);
-        } else {
-            return (Step.Idle, 0);
-        }
+    function done() external onlySafeSigners {
+        processed[source(_msgSender())] += 1;
     }
 
     /**
@@ -106,7 +118,7 @@ contract MPX25519 is Ownable {
      * @param _signer Signer address
      * @return _slot Signer slot
      */
-    function sourceSlot(address _signer) public view returns (uint256 _slot) {
+    function source(address _signer) public view returns (uint256 _slot) {
         for (uint256 _i = 0; _i < signers.length; _i++) {
             if (_signer == signers[_i]) {
                 return _i;
@@ -119,9 +131,10 @@ contract MPX25519 is Ownable {
      * Get the next signer's slot doing round-robin.
      * A type(uint256).max return value indicates that _sourceSlot is not 
      * among the stored signer set.
+     * @param _sourceSlot Source slot
      * @return _slot Neighbor slot
      */
-    function targetSlot(uint256 _sourceSlot) public view returns (uint256 _slot) {
+    function target(uint256 _sourceSlot) public view returns (uint256 _slot) {
         if (_sourceSlot == type(uint256).max || _sourceSlot >= signers.length) {
             return type(uint256).max;
         } else if (_sourceSlot == signers.length - 1) {
