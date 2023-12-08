@@ -16,7 +16,7 @@ async function kdf(signer) {
 function scalarMult(a, b) {
   if (typeof a === 'string') a = Buffer.from(a.replace('0x', ''), 'hex')
   if (typeof b === 'string') b = Buffer.from(b.replace('0x', ''), 'hex')
-  return _scalarMult(a, b)
+  return Buffer.from(_scalarMult(a, b))
 }
 
 module.exports = {
