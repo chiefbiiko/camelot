@@ -3,7 +3,6 @@ pragma solidity ^0.8.19;
 
 import { Ownable } from "openzeppelin-contracts/access/Ownable.sol";
 import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManager.sol";
-import "forge-std/console2.sol";//TMP
 
 contract MPX25519 is Ownable {
     enum Step { End, Ok, Idle }
@@ -64,7 +63,7 @@ contract MPX25519 is Ownable {
         } else if (queues[_targetSlot].length <= queues[_sourceSlot].length) {
             return (Step.Ok, queues[_sourceSlot][processed[_sourceSlot] - 1]);
         } else {
-            return (Step.Idle, 0);
+            return (Step.Idle, bytes32(0));
         }
     }
 
