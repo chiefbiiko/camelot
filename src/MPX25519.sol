@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-/// @dev SafeMPX25519 facilitates multi-party X25519 and MPECDH in general.
+/// @dev MPX25519 facilitates multi-party X25519 and MPECDH in general.
 abstract contract MPX25519 {
     /// @dev Signals signer whether to proceed with ceremony.
     enum Step {
