@@ -20,7 +20,7 @@ abstract contract MPX25519 is Ownable {
     mapping(uint256 => uint256) public processed;
 
     /// @dev Only allows the safe's current signer set.
-    modifier onlySafeSigners() {
+    modifier onlySigners() {
         address[] memory _signers = _getSigners();
         bool _isSigner = false;
         for (uint256 _i = 0; _i < _signers.length; _i++) {
@@ -74,7 +74,7 @@ abstract contract MPX25519 is Ownable {
      * @dev Submits an intermediate key.
      * @param _key New key
      */
-    function step(bytes32 _key) external onlySafeSigners {
+    function step(bytes32 _key) external onlySigners {
         uint256 _sourceSlot = source(_msgSender());
         uint256 _processed = processed[_sourceSlot];
         for (uint256 _i = 0; _i < signers.length; _i++) {
@@ -94,7 +94,7 @@ abstract contract MPX25519 is Ownable {
     }
 
     /// @dev Signals that a signer has completed a step.
-    function done() external onlySafeSigners {
+    function done() external onlySigners {
         processed[source(_msgSender())] += 1;
     }
 

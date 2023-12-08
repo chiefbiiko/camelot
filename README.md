@@ -1,5 +1,5 @@
 # mpx25519
 
-Multi-party X25519 to derive a shared secret among all signers of a Safe.
+Multi-party X25519
 
-https://crypto.stackexchange.com/questions/72207/ecdh-for-more-than-two-parties
+https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange#Operation_with_more_than_two_parties
