@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManager.sol";
+import { OwnerManager } from "safe-contracts/base/OwnerManager.sol";
 import { MPX25519 } from "./MPX25519.sol";
 
 /**
@@ -11,7 +11,7 @@ import { MPX25519 } from "./MPX25519.sol";
 contract SafeMPX25519 is MPX25519 {
     /**
      * @dev Gets a Safe's current set of signers.
-     * @return _signers
+     * @return _signers Array of signer addresses
      */
     function _getSigners()
         internal
@@ -19,6 +19,6 @@ contract SafeMPX25519 is MPX25519 {
         override
         returns (address[] memory _signers)
     {
-        return SafeOwnerManager(super.owner()).getOwners();
+        return OwnerManager(owner).getOwners();
     }
 }

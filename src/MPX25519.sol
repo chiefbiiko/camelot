@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import { Ownable } from "openzeppelin-contracts/access/Ownable.sol";
-
 /// @dev SafeMPX25519 facilitates multi-party X25519 and MPECDH in general.
-abstract contract MPX25519 is Ownable {
+abstract contract MPX25519 {
     /// @dev Signals signer whether to proceed with ceremony.
     enum Step {
         End,
@@ -12,6 +10,8 @@ abstract contract MPX25519 is Ownable {
         Idle
     }
 
+    /// @dev Owner - usually a safe.
+    address public immutable owner;
     /// @dev Copy of the safe's signers that serves as slot base.
     address[] public signers;
     /// @dev Signers' key queues mapping from slot to intermediate keys.
@@ -24,7 +24,7 @@ abstract contract MPX25519 is Ownable {
         address[] memory _signers = _getSigners();
         bool _isSigner = false;
         for (uint256 _i = 0; _i < _signers.length; _i++) {
-            if (_msgSender() == _signers[_i]) {
+            if (msg.sender == _signers[_i]) {
                 _isSigner = true;
                 break;
             }
@@ -33,14 +33,21 @@ abstract contract MPX25519 is Ownable {
         _;
     }
 
+    /// @dev Only allows the owner - usually a safe.
+    modifier onlyOwner() {
+        require(msg.sender == owner, "only owner");
+        _;
+    }
+
     /// @dev MPX25519 ctor.
-    constructor() Ownable(_msgSender()) {
+    constructor() {
+        owner = msg.sender;
         signers = _getSigners();
     }
 
     /**
      * @dev Resets the signer set to the safe's current one.
-     * Safes must call this method whenever their signer set has changed.
+     * Safes must call reconstruct() whenever their signer set has changed.
      */
     function reconstruct() external onlyOwner {
         for (uint256 _i = 0; _i < signers.length; _i++) {
@@ -75,7 +82,7 @@ abstract contract MPX25519 is Ownable {
      * @param _key New key
      */
     function step(bytes32 _key) external onlySigners {
-        uint256 _sourceSlot = source(_msgSender());
+        uint256 _sourceSlot = source(msg.sender);
         uint256 _processed = processed[_sourceSlot];
         for (uint256 _i = 0; _i < signers.length; _i++) {
             if (_i != _sourceSlot) {
@@ -95,7 +102,7 @@ abstract contract MPX25519 is Ownable {
 
     /// @dev Signals that a signer has completed a step.
     function done() external onlySigners {
-        processed[source(_msgSender())] += 1;
+        processed[source(msg.sender)] += 1;
     }
 
     /**
@@ -133,21 +140,24 @@ abstract contract MPX25519 is Ownable {
 
     /**
      * @dev Gets the stored list of Safe signers.
-     * @return _signers Array of Safe signers.
+     * @return _signers Array of Safe signers
      */
     function getSigners() public view returns (address[] memory _signers) {
         return signers;
     }
 
     /**
-     * @dev Get an internal queue.
+     * @dev Gets an internal queue.
      * @param _slot Signer slot
-     * @return _signers Array of intermediate keys.
+     * @return _keys Array of intermediate keys
      */
-    function getQueue(uint256 _slot) public view returns (bytes32[] memory) {
+    function getQueue(uint256 _slot) public view returns (bytes32[] memory _keys) {
         return queues[_slot];
     }
 
-    /// @dev Function interface to fetch the current signer set.
-    function _getSigners() internal view virtual returns (address[] memory);
+    /**
+     * @dev Function interface to fetch the current signer set.
+     * @return _signers Array of signer addresses
+     */
+    function _getSigners() internal view virtual returns (address[] memory _signers);
 }
