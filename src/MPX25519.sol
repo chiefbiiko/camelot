@@ -39,23 +39,6 @@ contract MPX25519 is Ownable {
     }
 
     /**
-     * Returns a list of Safe signers.
-     * @return _signers Array of Safe signers.
-     */
-    function getSigners() public view returns (address[] memory _signers) {
-        return signers;
-    }
-
-    /**
-     * Returns an internal queue. Exposed for debugging only.
-     * @param _slot Signer slot
-     * @return _signers Array of intermediate keys.
-     */
-    function getQueue(uint256 _slot) public view returns (bytes32[] memory) {
-        return queues[_slot];
-    }
-
-    /**
      * Resets the signer set to the safe's current one.
      * Safes must call this method whenever their signer set has changed.
      */
@@ -142,5 +125,22 @@ contract MPX25519 is Ownable {
         } else {
             return _sourceSlot + 1;
         }
+    }
+
+    /**
+     * Returns a list of Safe signers.
+     * @return _signers Array of Safe signers.
+     */
+    function getSigners() public view returns (address[] memory _signers) {
+        return signers;
+    }
+
+    /**
+     * Returns an internal queue. Exposed for debugging only.
+     * @param _slot Signer slot
+     * @return _signers Array of intermediate keys.
+     */
+    function getQueue(uint256 _slot) public view returns (bytes32[] memory) {
+        return queues[_slot];
     }
 }
