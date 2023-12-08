@@ -13,7 +13,12 @@ contract SafeMPX25519 is MPX25519 {
      * @dev Gets a Safe's current set of signers.
      * @return _signers
      */
-    function _getSigners() internal override view returns (address[] memory _signers) {
-         _signers = SafeOwnerManager(super.owner()).getOwners();
+    function _getSigners()
+        internal
+        view
+        override
+        returns (address[] memory _signers)
+    {
+        _signers = SafeOwnerManager(super.owner()).getOwners();
     }
 }

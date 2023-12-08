@@ -152,7 +152,9 @@ describe('MPX25519', function () {
     await safeMPX255193.connect(bob).done()
 
     // const bGc = scalarMult(c.secretKey, bG)
-    const bG = await safeMPX255193.prep(charlie.address).then(([_, k]) => buf(k))
+    const bG = await safeMPX255193
+      .prep(charlie.address)
+      .then(([_, k]) => buf(k))
     console.log('charlie pulld bG', hex(bG))
     const bGc = scalarMult(c.secretKey, bG)
     console.log('charlie comp bGc', hex(bGc))
@@ -165,9 +167,13 @@ describe('MPX25519', function () {
     await safeMPX255193.connect(alice).step(cGa)
     await safeMPX255193.connect(alice).done()
     // await _logQueues() //DBG
-    const _aGb = await safeMPX255193.prep(charlie.address).then(([_, k]) => buf(k))
+    const _aGb = await safeMPX255193
+      .prep(charlie.address)
+      .then(([_, k]) => buf(k))
     const aGbc = Buffer.from(scalarMult(c.secretKey, _aGb)).toString('hex')
-    const _bGc = await safeMPX255193.prep(alice.address).then(([_, k]) => buf(k))
+    const _bGc = await safeMPX255193
+      .prep(alice.address)
+      .then(([_, k]) => buf(k))
     const bGca = Buffer.from(scalarMult(a.secretKey, _bGc)).toString('hex')
     const _cGa = await safeMPX255193.prep(bob.address).then(([_, k]) => buf(k))
     const cGab = Buffer.from(scalarMult(b.secretKey, _cGa)).toString('hex')

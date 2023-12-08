@@ -149,5 +149,5 @@ abstract contract MPX25519 is Ownable {
     }
 
     /// @dev Function interface to fetch the current signer set.
-    function _getSigners() internal virtual view returns (address[] memory);
+    function _getSigners() internal view virtual returns (address[] memory);
 }
