@@ -2,10 +2,10 @@
 pragma solidity ^0.8.19;
 
 import { Ownable } from "openzeppelin-contracts/access/Ownable.sol";
-import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManager.sol";
+// import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManager.sol";
 
 /// @dev MPX25519 facilitates multi-party X25519 and MPECDH in general.
-contract MPX25519 is Ownable {
+abstract contract MPX25519 is Ownable {
     /// @dev Signals signer whether to proceed with ceremony.
     enum Step {
         End,
@@ -13,8 +13,8 @@ contract MPX25519 is Ownable {
         Idle
     }
 
-    /// @dev Safe.
-    address public immutable safe;
+    // /// @dev Safe.
+    // address public immutable safe;
     /// @dev Copy of the safe's signers that serves as slot base.
     address[] public signers;
     /// @dev Signers' key queues mapping from slot to intermediate keys.
@@ -26,7 +26,8 @@ contract MPX25519 is Ownable {
      * @dev Only allows the safe's current signer set.
      */
     modifier onlySafeSigners() {
-        address[] memory _signers = SafeOwnerManager(safe).getOwners();
+        // address[] memory _signers = SafeOwnerManager(safe).getOwners();
+        address[] memory _signers = _getSigners();
         bool _isSigner = false;
         for (uint256 _i = 0; _i < _signers.length; _i++) {
             if (_msgSender() == _signers[_i]) {
@@ -38,13 +39,16 @@ contract MPX25519 is Ownable {
         _;
     }
 
+    function _getSigners() internal virtual view returns (address[] memory);
+
     /**
      * @dev Constructs an accessoir that enables deriving a shared secret 
      * among all signers of a safe. Must be deployed through a safe.
      */
     constructor() Ownable(_msgSender()) {
-        safe = _msgSender();
-        signers = SafeOwnerManager(safe).getOwners();
+        // safe = _msgSender();
+        // signers = SafeOwnerManager(safe).getOwners();
+        signers = _getSigners();
     }
 
     /**
@@ -55,7 +59,8 @@ contract MPX25519 is Ownable {
         for (uint256 _i = 0; _i < signers.length; _i++) {
             delete queues[_i];
         }
-        signers = SafeOwnerManager(safe).getOwners();
+        // signers = SafeOwnerManager(safe).getOwners();
+        signers = _getSigners();
     }
 
     /**
@@ -143,7 +148,7 @@ contract MPX25519 is Ownable {
     }
 
     /**
-     * @dev Returns a list of Safe signers.
+     * @dev Get the stored list of Safe signers.
      * @return _signers Array of Safe signers.
      */
     function getSigners() public view returns (address[] memory _signers) {
@@ -151,7 +156,7 @@ contract MPX25519 is Ownable {
     }
 
     /**
-     * @dev Returns an internal queue. Exposed for debugging only.
+     * @dev Get an internal queue.
      * @param _slot Signer slot
      * @return _signers Array of intermediate keys.
      */

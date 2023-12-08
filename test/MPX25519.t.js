@@ -29,12 +29,12 @@ describe('MPX25519', function () {
       eve
     ])
 
-    await safeMock3.connect(alice).deployMPX25519()
-    await safeMock5.connect(alice).deployMPX25519()
+    await safeMock3.connect(alice).deploySafeMPX25519()
+    await safeMock5.connect(alice).deploySafeMPX25519()
 
-    const MPX25519 = await ethers.getContractFactory('MPX25519')
-    const mpx255193 = MPX25519.attach(await safeMock3.mpx25519())
-    const mpx255195 = MPX25519.attach(await safeMock5.mpx25519())
+    const MPX25519 = await ethers.getContractFactory('SafeMPX25519')
+    const mpx255193 = MPX25519.attach(await safeMock3.safeMPX25519())
+    const mpx255195 = MPX25519.attach(await safeMock5.safeMPX25519())
 
     const G = new Uint8Array(32)
     G[0] = 9
