@@ -2,9 +2,8 @@
 pragma solidity ^0.8.19;
 
 import { Ownable } from "openzeppelin-contracts/access/Ownable.sol";
-// import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManager.sol";
 
-/// @dev MPX25519 facilitates multi-party X25519 and MPECDH in general.
+/// @dev SafeMPX25519 facilitates multi-party X25519 and MPECDH in general.
 abstract contract MPX25519 is Ownable {
     /// @dev Signals signer whether to proceed with ceremony.
     enum Step {
@@ -13,8 +12,6 @@ abstract contract MPX25519 is Ownable {
         Idle
     }
 
-    // /// @dev Safe.
-    // address public immutable safe;
     /// @dev Copy of the safe's signers that serves as slot base.
     address[] public signers;
     /// @dev Signers' key queues mapping from slot to intermediate keys.
@@ -22,11 +19,8 @@ abstract contract MPX25519 is Ownable {
     /// @dev Processed counter per signer.
     mapping(uint256 => uint256) public processed;
 
-    /**
-     * @dev Only allows the safe's current signer set.
-     */
+    /// @dev Only allows the safe's current signer set.
     modifier onlySafeSigners() {
-        // address[] memory _signers = SafeOwnerManager(safe).getOwners();
         address[] memory _signers = _getSigners();
         bool _isSigner = false;
         for (uint256 _i = 0; _i < _signers.length; _i++) {
@@ -39,15 +33,8 @@ abstract contract MPX25519 is Ownable {
         _;
     }
 
-    function _getSigners() internal virtual view returns (address[] memory);
-
-    /**
-     * @dev Constructs an accessoir that enables deriving a shared secret 
-     * among all signers of a safe. Must be deployed through a safe.
-     */
+    /// @dev MPX25519 ctor.
     constructor() Ownable(_msgSender()) {
-        // safe = _msgSender();
-        // signers = SafeOwnerManager(safe).getOwners();
         signers = _getSigners();
     }
 
@@ -59,12 +46,11 @@ abstract contract MPX25519 is Ownable {
         for (uint256 _i = 0; _i < signers.length; _i++) {
             delete queues[_i];
         }
-        // signers = SafeOwnerManager(safe).getOwners();
         signers = _getSigners();
     }
 
     /**
-     * @dev Iterate all intermediate keys to process.
+     * @dev Iterates all intermediate keys to process.
      * Step.End status 0 means there are no more steps for given signer.
      * @param _signer Signer address
      * @return _status ,_key
@@ -107,15 +93,13 @@ abstract contract MPX25519 is Ownable {
         }
     }
 
-    /**
-     * @dev Signals that a signer has completed a step.
-     */
+    /// @dev Signals that a signer has completed a step.
     function done() external onlySafeSigners {
         processed[source(_msgSender())] += 1;
     }
 
     /**
-     * @dev Get the signer's abstract slot.
+     * @dev Gets the signer's abstract slot.
      * A type(uint256).max return value indicates that the msg.sender is not
      * part of the stored signer set.
      * @param _signer Signer address
@@ -131,7 +115,7 @@ abstract contract MPX25519 is Ownable {
     }
 
     /**
-     * @dev Get the next signer's slot doing round-robin.
+     * @dev Gets the next signer's slot doing round-robin.
      * A type(uint256).max return value indicates that _sourceSlot is not
      * among the stored signer set.
      * @param _sourceSlot Source slot
@@ -148,7 +132,7 @@ abstract contract MPX25519 is Ownable {
     }
 
     /**
-     * @dev Get the stored list of Safe signers.
+     * @dev Gets the stored list of Safe signers.
      * @return _signers Array of Safe signers.
      */
     function getSigners() public view returns (address[] memory _signers) {
@@ -163,4 +147,7 @@ abstract contract MPX25519 is Ownable {
     function getQueue(uint256 _slot) public view returns (bytes32[] memory) {
         return queues[_slot];
     }
+
+    /// @dev Function interface to fetch the current signer set.
+    function _getSigners() internal virtual view returns (address[] memory);
 }
