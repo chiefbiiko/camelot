@@ -247,5 +247,8 @@ describe('MPX25519', function () {
     expect(sharedSecrets.every(s => s === expected)).to.be.true
   })
 
+  //TODO test 5
   //TODO submit randomly
+  //TODO test submit twice (to correct)
+  //TODO test reconstruct
 })
