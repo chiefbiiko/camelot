@@ -153,15 +153,15 @@ describe('MPX25519', function () {
     const _aGb = await safeMPX255193
       .prep(charlie.address)
       .then(([_, k]) => buf(k))
-    const aGbc = Buffer.from(scalarMult(c.secretKey, _aGb)).toString('hex')
+    const aGbc = hex(scalarMult(c.secretKey, _aGb))
 
     const _bGc = await safeMPX255193
       .prep(alice.address)
       .then(([_, k]) => buf(k))
-    const bGca = Buffer.from(scalarMult(a.secretKey, _bGc)).toString('hex')
+    const bGca = hex(scalarMult(a.secretKey, _bGc))
 
     const _cGa = await safeMPX255193.prep(bob.address).then(([_, k]) => buf(k))
-    const cGab = Buffer.from(scalarMult(b.secretKey, _cGa)).toString('hex')
+    const cGab = hex(scalarMult(b.secretKey, _cGa))
 
     expect(aGbc).to.equal(bGca)
     expect(bGca).to.equal(cGab)
