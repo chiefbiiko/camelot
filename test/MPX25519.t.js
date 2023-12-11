@@ -177,9 +177,8 @@ describe('MPX25519', function () {
       signer.sharedSecret = await ceremony.stepX(signer)
     }
 
-    const sharedSecrets = signers.map(s => s.sharedSecret)
-    const expected = sharedSecrets[0]
-    expect(sharedSecrets.every(s => s === expected)).to.be.true
+    const expected = signers[0].sharedSecret
+    expect(signers.every(s => s.sharedSecret === expected)).to.be.true
   })
 
   //TODO test 5
