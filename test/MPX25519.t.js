@@ -167,7 +167,7 @@ describe('MPX25519', function () {
     expect(bGca).to.equal(cGab)
   })
 
-  it('should yield all similar shared secrets - loops', async function () {
+  it('should yield all similar shared secrets after a threesome ceremony', async function () {
     const { alice, bob, charlie, safeMPX255193 } =
       await loadFixture(MPX25519Fixture)
     const signers = [alice, bob, charlie]
@@ -191,10 +191,10 @@ describe('MPX25519', function () {
     // ceremony end
 
     for (const signer of signers) {
-      const [status, key] = await safeMPX255193.prep(signer.address)
+      const [status, preKey] = await safeMPX255193.prep(signer.address)
       if (status !== 0n) throw Error('expected status 0 got ' + status)
       const kp = await kdf(signer)
-      signer.sharedSecret = hex(scalarMult(kp.secretKey, key))
+      signer.sharedSecret = hex(scalarMult(kp.secretKey, preKey))
     }
 
     const sharedSecrets = signers.map(s => s.sharedSecret)
