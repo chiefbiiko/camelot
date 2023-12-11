@@ -27,7 +27,7 @@ function scalarMult(a, b) {
   return Buffer.from(_scalarMult(a, b))
 }
 
-async function choreo(mpx25519Address) {
+async function ceremony(mpx25519Address) {
   const MPX25519 = await ethers.getContractFactory('SafeMPX25519')
   const mpx255193 = MPX25519.attach(mpx25519Address)
   return {
@@ -58,5 +58,5 @@ module.exports = {
   buf,
   kdf,
   scalarMult,
-  choreo
+  ceremony
 }

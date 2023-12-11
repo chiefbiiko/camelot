@@ -3,26 +3,13 @@ const { ethers } = require('hardhat')
 const {
   loadFixture
 } = require('@nomicfoundation/hardhat-toolbox/network-helpers')
-const { kdf, scalarMult, choreo, hex, buf } = require('../src')
+const { kdf, scalarMult, ceremony, hex, buf } = require('../src')
 
 async function deploy(contractName, ...args) {
   return ethers.getContractFactory(contractName).then(f => f.deploy(...args))
 }
 
-// async function _logQueues() {
-//   //DBG
-//   for (let i = 0; i < signers.length; i++) {
-//     console.log(
-//       'queue',
-//       i,
-//       'length',
-//       await safeMPX255193.getQueue(i).then(q => q.length)
-//     )
-//   }
-//   console.log('==================')
-// }
-
-describe('MPX25519', function () {
+describe('SafeMPX25519', function () {
   async function MPX25519Fixture() {
     const [alice, bob, charlie, dave, eve, ferdie] = await ethers.getSigners()
     const safeMock3 = await deploy('SafeMock3', [alice, bob, charlie])
@@ -59,7 +46,7 @@ describe('MPX25519', function () {
     }
   }
 
-  it('should have deployed MPX25519 through Safe', async function () {
+  it('should have deployed SafeMPX25519 through Safe', async function () {
     const { safeMPX255193, safeMPX255195 } = await loadFixture(MPX25519Fixture)
 
     const safeMPX255193Code = await ethers.provider
@@ -159,22 +146,22 @@ describe('MPX25519', function () {
     expect(bGca).to.equal(cGab)
   })
 
-  it('should yield all similar shared secrets after a threesome ceremony', async function () {
+  it('should yield a shared secret after a threesome ceremony', async function () {
     const { alice, bob, charlie, safeMPX255193 } =
       await loadFixture(MPX25519Fixture)
     const signers = [alice, bob, charlie]
 
-    const ceremony = await choreo(await safeMPX255193.getAddress())
+    const choreo = await ceremony(await safeMPX255193.getAddress())
     for (const signer of signers) {
-      await ceremony.step0(signer)
+      await choreo.step0(signer)
     }
     for (let i = 0; i < signers.length - 2; i++) {
       for (const signer of signers) {
-        await ceremony.stepN(signer)
+        await choreo.stepN(signer)
       }
     }
     for (const signer of signers) {
-      signer.sharedSecret = await ceremony.stepX(signer)
+      signer.sharedSecret = await choreo.stepX(signer)
     }
 
     const expected = signers[0].sharedSecret
