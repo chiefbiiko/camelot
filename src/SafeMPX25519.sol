@@ -19,6 +19,6 @@ contract SafeMPX25519 is MPX25519 {
         override
         returns (address[] memory _signers)
     {
-        return OwnerManager(owner).getOwners();
+        return OwnerManager(master).getOwners();
     }
 }

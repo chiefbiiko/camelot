@@ -10,8 +10,8 @@ abstract contract MPX25519 {
         Idle
     }
 
-    /// @dev Owner - usually a safe.
-    address public immutable owner;
+    /// @dev Master - usually a safe.
+    address public immutable master;
     /// @dev Copy of the safe's signers that serves as slot base.
     address[] public signers;
     /// @dev Signers' key queues mapping from slot to intermediate keys.
@@ -33,15 +33,15 @@ abstract contract MPX25519 {
         _;
     }
 
-    /// @dev Only allows the owner - usually a safe.
-    modifier onlyOwner() {
-        require(msg.sender == owner, "only owner");
+    /// @dev Only allows the master - usually a safe.
+    modifier onlyMaster() {
+        require(msg.sender == master, "only master");
         _;
     }
 
     /// @dev MPX25519 ctor.
     constructor() {
-        owner = msg.sender;
+        master = msg.sender;
         signers = _getSigners();
     }
 
@@ -49,7 +49,7 @@ abstract contract MPX25519 {
      * @dev Resets the signer set to the safe's current one.
      * Safes must call reconstruct() whenever their signer set has changed.
      */
-    function reconstruct() external onlyOwner {
+    function reconstruct() external onlyMaster {
         for (uint256 _i = 0; _i < signers.length; _i++) {
             delete queues[_i];
         }
@@ -151,13 +151,20 @@ abstract contract MPX25519 {
      * @param _slot Signer slot
      * @return _keys Array of intermediate keys
      */
-    function getQueue(uint256 _slot) public view returns (bytes32[] memory _keys) {
+    function getQueue(
+        uint256 _slot
+    ) public view returns (bytes32[] memory _keys) {
         return queues[_slot];
     }
 
     /**
      * @dev Function interface to fetch the current signer set.
+     * Derived contracts must implement and override this method.
      * @return _signers Array of signer addresses
      */
-    function _getSigners() internal view virtual returns (address[] memory _signers);
+    function _getSigners()
+        internal
+        view
+        virtual
+        returns (address[] memory _signers);
 }

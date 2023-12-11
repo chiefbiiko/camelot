@@ -17,6 +17,19 @@ function buf(s) {
   return Buffer.from(s.replace('0x', ''), 'hex')
 }
 
+// async function _logQueues() {
+//   //DBG
+//   for (let i = 0; i < signers.length; i++) {
+//     console.log(
+//       'queue',
+//       i,
+//       'length',
+//       await safeMPX255193.getQueue(i).then(q => q.length)
+//     )
+//   }
+//   console.log('==================')
+// }
+
 describe('MPX25519', function () {
   async function MPX25519Fixture() {
     const [alice, bob, charlie, dave, eve, ferdie] = await ethers.getSigners()
@@ -88,18 +101,12 @@ describe('MPX25519', function () {
     const c = await kdf(charlie)
 
     const aG = a.publicKey
-    console.log('aG', hex(aG))
     const bG = b.publicKey
-    console.log('bG', hex(bG))
     const cG = c.publicKey
-    console.log('cG', hex(cG))
 
     const aGb = scalarMult(b.secretKey, aG)
-    console.log('aGb', hex(aGb))
     const bGc = scalarMult(c.secretKey, bG)
-    console.log('bGc', hex(bGc))
     const cGa = scalarMult(a.secretKey, cG)
-    console.log('cGa', hex(cGa))
 
     const aGbc = hex(scalarMult(c.secretKey, aGb))
     const bGca = hex(scalarMult(a.secretKey, bGc))
@@ -112,69 +119,47 @@ describe('MPX25519', function () {
   it('poc via contract', async function () {
     const { alice, bob, charlie, safeMPX255193 } =
       await loadFixture(MPX25519Fixture)
-    const signers = [alice, bob, charlie]
-    async function _logQueues() {
-      //DBG
-      for (let i = 0; i < signers.length; i++) {
-        console.log(
-          'queue',
-          i,
-          'length',
-          await safeMPX255193.getQueue(i).then(q => q.length)
-        )
-      }
-      console.log('==================')
-    }
 
     const a = await kdf(alice)
     const b = await kdf(bob)
     const c = await kdf(charlie)
 
-    // const aG = a.publicKey
-    console.log('a.publicKey', hex(a.publicKey))
     await safeMPX255193.connect(alice).step(a.publicKey)
     await safeMPX255193.connect(alice).done()
-    // const bG = b.publicKey
-    console.log('b.publicKey', hex(b.publicKey))
+
     await safeMPX255193.connect(bob).step(b.publicKey)
     await safeMPX255193.connect(bob).done()
-    // const cG = c.publicKey
-    console.log('c.publicKey', hex(c.publicKey))
+
     await safeMPX255193.connect(charlie).step(c.publicKey)
     await safeMPX255193.connect(charlie).done()
-    // await _logQueues() //DBG
-    // const aGb = scalarMult(b.secretKey, aG)
+
     const aG = await safeMPX255193.prep(bob.address).then(([_, k]) => buf(k))
-    console.log('bob pulld aG', hex(aG))
     const aGb = scalarMult(b.secretKey, aG)
-    console.log('bob comp aGb', hex(aGb))
     await safeMPX255193.connect(bob).step(aGb)
     await safeMPX255193.connect(bob).done()
 
-    // const bGc = scalarMult(c.secretKey, bG)
     const bG = await safeMPX255193
       .prep(charlie.address)
       .then(([_, k]) => buf(k))
-    console.log('charlie pulld bG', hex(bG))
     const bGc = scalarMult(c.secretKey, bG)
-    console.log('charlie comp bGc', hex(bGc))
     await safeMPX255193.connect(charlie).step(bGc)
     await safeMPX255193.connect(charlie).done()
 
-    // const cGa = scalarMult(a.secretKey, cG)
     const cG = await safeMPX255193.prep(alice.address).then(([_, k]) => buf(k))
     const cGa = scalarMult(a.secretKey, cG)
     await safeMPX255193.connect(alice).step(cGa)
     await safeMPX255193.connect(alice).done()
-    // await _logQueues() //DBG
+
     const _aGb = await safeMPX255193
       .prep(charlie.address)
       .then(([_, k]) => buf(k))
     const aGbc = Buffer.from(scalarMult(c.secretKey, _aGb)).toString('hex')
+
     const _bGc = await safeMPX255193
       .prep(alice.address)
       .then(([_, k]) => buf(k))
     const bGca = Buffer.from(scalarMult(a.secretKey, _bGc)).toString('hex')
+
     const _cGa = await safeMPX255193.prep(bob.address).then(([_, k]) => buf(k))
     const cGab = Buffer.from(scalarMult(b.secretKey, _cGa)).toString('hex')
 
@@ -182,68 +167,38 @@ describe('MPX25519', function () {
     expect(bGca).to.equal(cGab)
   })
 
-  //WIP
-  it.skip('should yield all similar shared secrets - loops', async function () {
-    const { alice, bob, charlie, safeMPX255193, G } =
+  it('should yield all similar shared secrets - loops', async function () {
+    const { alice, bob, charlie, safeMPX255193 } =
       await loadFixture(MPX25519Fixture)
     const signers = [alice, bob, charlie]
 
-    async function _logQueues() {
-      //DBG
-      for (let i = 0; i < signers.length; i++) {
-        console.log(
-          'queue',
-          i,
-          'length',
-          await safeMPX255193.getQueue(i).then(q => q.length)
-        )
+    // ceremony start
+    for (const signer of signers) {
+      const kp = await kdf(signer)
+      await safeMPX255193.connect(signer).step(kp.publicKey)
+      await safeMPX255193.connect(signer).done()
+    }
+    for (let i = 0; i < signers.length - 2; i++) {
+      for (const signer of signers) {
+        const [status, preKey] = await safeMPX255193.prep(signer.address)
+        if (status !== 1n) throw Error('expected status 1 got ' + status)
+        const kp = await kdf(signer)
+        const newKey = scalarMult(kp.secretKey, preKey)
+        await safeMPX255193.connect(signer).step(newKey)
+        await safeMPX255193.connect(signer).done()
       }
-      console.log('==================')
     }
+    // ceremony end
 
-    // there are always signers.length - 1 rounds prefinal rounds
-    // the output of the final round is the shared secret
-
-    console.log('>>>>>>>1stround begin')
     for (const signer of signers) {
-      const kp = await kdf(signer)
-      // const share = scalarMult(kp.secretKey, G)
-      await safeMPX255193.connect(signer).submit(kp.publicKey)
-      // console.log(">>> kp pk", Buffer.from(kp.publicKey).toString("hex"))
-      await _logQueues() //DBG
-    }
-    console.log('>>>>>>>1stround done')
-
-    console.log('>>>>>>>2ndround begin')
-    for (const signer of signers) {
-      const [status, share] = await safeMPX255193.share(signer.address)
-      if (status !== 1n) throw Error('expected status 1 got ' + status)
-      // const revshare = Buffer.from(share.replace("0x",""), "hex").reverse()
-      console.log('>>> 2nd lop cG', share)
-      const kp = await kdf(signer)
-      const newShare = scalarMult(kp.secretKey, share)
-      console.log('>>> 2nd lop cGa', Buffer.from(newShare).toString('hex'))
-      // return
-      await safeMPX255193.connect(signer).submit(newShare) //(1, newShare)
-
-      await _logQueues() //DBG
-    }
-    console.log('>>>>>>>2ndround done')
-
-    // final
-    for (const signer of signers) {
-      const [status, share] = await safeMPX255193.share(signer.address)
+      const [status, key] = await safeMPX255193.prep(signer.address)
       if (status !== 0n) throw Error('expected status 0 got ' + status)
-      else console.log('>>>>>> signer ended')
-      console.log('>>> semifinal share', share)
       const kp = await kdf(signer)
-      signer.sharedSecret =
-        '0x' + Buffer.from(scalarMult(kp.secretKey, share)).toString('hex')
+      signer.sharedSecret = hex(scalarMult(kp.secretKey, key))
     }
 
     const sharedSecrets = signers.map(s => s.sharedSecret)
     const expected = sharedSecrets[0]
-    console.log('>>> shared secrets', sharedSecrets) //DBG
     expect(sharedSecrets.every(s => s === expected)).to.be.true
   })
 
