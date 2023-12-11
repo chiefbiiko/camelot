@@ -3,18 +3,10 @@ const { ethers } = require('hardhat')
 const {
   loadFixture
 } = require('@nomicfoundation/hardhat-toolbox/network-helpers')
-const { kdf, scalarMult } = require('../src')
+const { kdf, scalarMult, choreo, hex, buf } = require('../src')
 
 async function deploy(contractName, ...args) {
   return ethers.getContractFactory(contractName).then(f => f.deploy(...args))
-}
-
-function hex(b) {
-  return Buffer.from(b).toString('hex')
-}
-
-function buf(s) {
-  return Buffer.from(s.replace('0x', ''), 'hex')
 }
 
 // async function _logQueues() {
@@ -172,29 +164,17 @@ describe('MPX25519', function () {
       await loadFixture(MPX25519Fixture)
     const signers = [alice, bob, charlie]
 
-    // ceremony start
+    const ceremony = await choreo(await safeMPX255193.getAddress())
     for (const signer of signers) {
-      const kp = await kdf(signer)
-      await safeMPX255193.connect(signer).step(kp.publicKey)
-      await safeMPX255193.connect(signer).done()
+      await ceremony.step0(signer)
     }
     for (let i = 0; i < signers.length - 2; i++) {
       for (const signer of signers) {
-        const [status, preKey] = await safeMPX255193.prep(signer.address)
-        if (status !== 1n) throw Error('expected status 1 got ' + status)
-        const kp = await kdf(signer)
-        const newKey = scalarMult(kp.secretKey, preKey)
-        await safeMPX255193.connect(signer).step(newKey)
-        await safeMPX255193.connect(signer).done()
+        await ceremony.stepN(signer)
       }
     }
-    // ceremony end
-
     for (const signer of signers) {
-      const [status, preKey] = await safeMPX255193.prep(signer.address)
-      if (status !== 0n) throw Error('expected status 0 got ' + status)
-      const kp = await kdf(signer)
-      signer.sharedSecret = hex(scalarMult(kp.secretKey, preKey))
+      signer.sharedSecret = await ceremony.stepX(signer)
     }
 
     const sharedSecrets = signers.map(s => s.sharedSecret)
