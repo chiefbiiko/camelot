@@ -12,14 +12,12 @@ async function deploy(contractName, ...args) {
 describe('SafeMPX25519', function () {
   async function MPX25519Fixture() {
     const [alice, bob, charlie, dave, eve, ferdie] = await ethers.getSigners()
-    const safeMock3 = await deploy('SafeMock3', [alice, bob, charlie])
-    const safeMock5 = await deploy('SafeMock5', [
-      alice,
-      bob,
-      charlie,
-      dave,
-      eve
-    ])
+    const safeMock3 = await deploy('SafeMock', [alice, bob, charlie], 2)
+    const safeMock5 = await deploy(
+      'SafeMock',
+      [alice, bob, charlie, dave, eve],
+      3
+    )
 
     await safeMock3.connect(alice).deploySafeMPX25519()
     await safeMock5.connect(alice).deploySafeMPX25519()
