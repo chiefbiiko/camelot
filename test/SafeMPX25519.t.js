@@ -166,8 +166,81 @@ describe('SafeMPX25519', function () {
     expect(signers.every(s => s.sharedSecret === expected)).to.be.true
   })
 
-  //TODO test 5
+  it('should yield a shared secret after a fivesome ceremony', async function () {
+    const { alice, bob, charlie, dave, eve, safeMPX255195 } =
+      await loadFixture(MPX25519Fixture)
+    const signers = [alice, bob, charlie, dave, eve]
+
+    const choreo = await ceremony(await safeMPX255195.getAddress())
+    for (const signer of signers) {
+      await choreo.step0(signer)
+    }
+    for (let i = 0; i < signers.length - 2; i++) {
+      for (const signer of signers) {
+        await choreo.stepN(signer)
+      }
+    }
+    for (const signer of signers) {
+      signer.sharedSecret = await choreo.stepX(signer)
+    }
+
+    const expected = signers[0].sharedSecret
+    expect(signers.every(s => s.sharedSecret === expected)).to.be.true
+  })
+
   //TODO submit randomly
   //TODO test submit twice (to correct)
+  it('should allow correcting a step', async function () {
+    const { alice, bob, charlie, safeMPX255193 } =
+      await loadFixture(MPX25519Fixture)
+
+    const a = await kdf(alice)
+    const b = await kdf(bob)
+    const c = await kdf(charlie)
+
+    await safeMPX255193.connect(alice).step(a.publicKey)
+    await safeMPX255193.connect(alice).done()
+
+    await safeMPX255193.connect(bob).step(b.publicKey)
+    await safeMPX255193.connect(bob).done()
+
+    await safeMPX255193.connect(charlie).step(c.publicKey)
+    await safeMPX255193.connect(charlie).done()
+
+    const aG = await safeMPX255193.prep(bob.address).then(([_, k]) => buf(k))
+    const aGb = scalarMult(b.secretKey, aG)
+    await safeMPX255193.connect(bob).step(Buffer.alloc(32))
+    await safeMPX255193.connect(bob).step(aGb)
+    await safeMPX255193.connect(bob).done()
+
+    const bG = await safeMPX255193
+      .prep(charlie.address)
+      .then(([_, k]) => buf(k))
+    const bGc = scalarMult(c.secretKey, bG)
+    await safeMPX255193.connect(charlie).step(bGc)
+    await safeMPX255193.connect(charlie).done()
+
+    const cG = await safeMPX255193.prep(alice.address).then(([_, k]) => buf(k))
+    const cGa = scalarMult(a.secretKey, cG)
+    await safeMPX255193.connect(alice).step(cGa)
+    await safeMPX255193.connect(alice).done()
+
+    const _aGb = await safeMPX255193
+      .prep(charlie.address)
+      .then(([_, k]) => buf(k))
+    const aGbc = hex(scalarMult(c.secretKey, _aGb))
+
+    const _bGc = await safeMPX255193
+      .prep(alice.address)
+      .then(([_, k]) => buf(k))
+    const bGca = hex(scalarMult(a.secretKey, _bGc))
+
+    const _cGa = await safeMPX255193.prep(bob.address).then(([_, k]) => buf(k))
+    const cGab = hex(scalarMult(b.secretKey, _cGa))
+
+    expect(aGbc).to.equal(bGca)
+    expect(bGca).to.equal(cGab)
+  })
+
   //TODO test reconstruct
 })
