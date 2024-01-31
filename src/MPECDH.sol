@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-/// @dev MPX25519 facilitates multi-party X25519 and MPECDH in general.
-abstract contract MPX25519 {
+/// @dev MPECDH facilitates multi-party ECDH.
+abstract contract MPECDH {
     /// @dev Signals signer whether to proceed with ceremony.
     enum Step {
         End,
@@ -39,7 +39,7 @@ abstract contract MPX25519 {
         _;
     }
 
-    /// @dev MPX25519 ctor.
+    /// @dev MPECDH ctor.
     constructor() {
         master = msg.sender;
         signers = _getSigners();
@@ -52,6 +52,7 @@ abstract contract MPX25519 {
     function reconstruct() external onlyMaster {
         for (uint256 _i = 0; _i < signers.length; _i++) {
             delete queues[_i];
+            delete processed[_i];
         }
         signers = _getSigners();
     }
@@ -97,12 +98,8 @@ abstract contract MPX25519 {
         require(_targetSlot != type(uint256).max, "no such slot");
         if (queues[_targetSlot].length < signers.length - 1) {
             queues[_targetSlot].push(_key);
+            processed[_sourceSlot] += 1;
         }
-    }
-
-    /// @dev Signals that a signer has completed a step.
-    function done() external onlySigners {
-        processed[source(msg.sender)] += 1;
     }
 
     /**

@@ -28,13 +28,13 @@ function scalarMult(a, b) {
 }
 
 async function ceremony(mpx25519Address) {
-  const MPX25519 = await ethers.getContractFactory('SafeMPX25519')
+  const MPX25519 = await ethers.getContractFactory('SafeMPECDH')
   const mpx255193 = MPX25519.attach(mpx25519Address)
   return {
     async step0(signer) {
       const kp = await kdf(signer)
       await mpx255193.connect(signer).step(kp.publicKey)
-      await mpx255193.connect(signer).done()
+      // await mpx255193.connect(signer).done()
     },
     async stepN(signer) {
       const [status, preKey] = await mpx255193.prep(signer.address)
@@ -42,7 +42,7 @@ async function ceremony(mpx25519Address) {
       const kp = await kdf(signer)
       const newKey = scalarMult(kp.secretKey, preKey)
       await mpx255193.connect(signer).step(newKey)
-      await mpx255193.connect(signer).done()
+      // await mpx255193.connect(signer).done()
     },
     async stepX(signer) {
       const [status, preKey] = await mpx255193.prep(signer.address)

@@ -9,7 +9,7 @@ async function deploy(contractName, ...args) {
   return ethers.getContractFactory(contractName).then(f => f.deploy(...args))
 }
 
-describe('SafeMPX25519', function () {
+describe('SafeMPECDH', function () {
   async function MPX25519Fixture() {
     const [alice, bob, charlie, dave, eve, ferdie] = await ethers.getSigners()
     const safeMock3 = await deploy('SafeMock', [alice, bob, charlie], 2)
@@ -19,12 +19,12 @@ describe('SafeMPX25519', function () {
       3
     )
 
-    await safeMock3.connect(alice).deploySafeMPX25519()
-    await safeMock5.connect(alice).deploySafeMPX25519()
+    await safeMock3.connect(alice).deploySafeMPECDH()
+    await safeMock5.connect(alice).deploySafeMPECDH()
 
-    const SafeMPX25519 = await ethers.getContractFactory('SafeMPX25519')
-    const safeMPX255193 = SafeMPX25519.attach(await safeMock3.safeMPX25519())
-    const safeMPX255195 = SafeMPX25519.attach(await safeMock5.safeMPX25519())
+    const SafeMPECDH = await ethers.getContractFactory('SafeMPECDH')
+    const safeMPECDH3 = SafeMPECDH.attach(await safeMock3.safeMPECDH())
+    const safeMPECDH5 = SafeMPECDH.attach(await safeMock5.safeMPECDH())
 
     const G = new Uint8Array(32)
     G[0] = 9
@@ -38,26 +38,26 @@ describe('SafeMPX25519', function () {
       ferdie,
       safeMock3,
       safeMock5,
-      safeMPX255193,
-      safeMPX255195,
+      safeMPECDH3,
+      safeMPECDH5,
       G
     }
   }
 
-  it('should have deployed SafeMPX25519 through Safe', async function () {
-    const { safeMPX255193, safeMPX255195 } = await loadFixture(MPX25519Fixture)
+  it('should have deployed SafeMPECDH through Safe', async function () {
+    const { safeMPECDH3, safeMPECDH5 } = await loadFixture(MPX25519Fixture)
 
-    const safeMPX255193Code = await ethers.provider
-      .getCode(await safeMPX255193.getAddress())
+    const safeMPECDH3Code = await ethers.provider
+      .getCode(await safeMPECDH3.getAddress())
       .then(c => c.replace('0x', ''))
-    const safeMPX255195Code = await ethers.provider
-      .getCode(await safeMPX255195.getAddress())
+    const safeMPECDH5Code = await ethers.provider
+      .getCode(await safeMPECDH5.getAddress())
       .then(c => c.replace('0x', ''))
 
-    expect(safeMPX255193Code.length).to.be.greaterThan(0)
-    expect(safeMPX255195Code.length).to.be.greaterThan(0)
+    expect(safeMPECDH3Code.length).to.be.greaterThan(0)
+    expect(safeMPECDH5Code.length).to.be.greaterThan(0)
 
-    const signers3 = await safeMPX255193.getSigners()
+    const signers3 = await safeMPECDH3.getSigners()
     expect(signers3.length).to.equal(3)
   })
 
@@ -94,50 +94,40 @@ describe('SafeMPX25519', function () {
   })
 
   it('poc via contract', async function () {
-    const { alice, bob, charlie, safeMPX255193 } =
+    const { alice, bob, charlie, safeMPECDH3 } =
       await loadFixture(MPX25519Fixture)
 
     const a = await kdf(alice)
     const b = await kdf(bob)
     const c = await kdf(charlie)
 
-    await safeMPX255193.connect(alice).step(a.publicKey)
-    await safeMPX255193.connect(alice).done()
+    await safeMPECDH3.connect(alice).step(a.publicKey)
 
-    await safeMPX255193.connect(bob).step(b.publicKey)
-    await safeMPX255193.connect(bob).done()
+    await safeMPECDH3.connect(bob).step(b.publicKey)
 
-    await safeMPX255193.connect(charlie).step(c.publicKey)
-    await safeMPX255193.connect(charlie).done()
+    await safeMPECDH3.connect(charlie).step(c.publicKey)
 
-    const aG = await safeMPX255193.prep(bob.address).then(([_, k]) => buf(k))
+    const aG = await safeMPECDH3.prep(bob.address).then(([_, k]) => buf(k))
     const aGb = scalarMult(b.secretKey, aG)
-    await safeMPX255193.connect(bob).step(aGb)
-    await safeMPX255193.connect(bob).done()
+    await safeMPECDH3.connect(bob).step(aGb)
 
-    const bG = await safeMPX255193
-      .prep(charlie.address)
-      .then(([_, k]) => buf(k))
+    const bG = await safeMPECDH3.prep(charlie.address).then(([_, k]) => buf(k))
     const bGc = scalarMult(c.secretKey, bG)
-    await safeMPX255193.connect(charlie).step(bGc)
-    await safeMPX255193.connect(charlie).done()
+    await safeMPECDH3.connect(charlie).step(bGc)
 
-    const cG = await safeMPX255193.prep(alice.address).then(([_, k]) => buf(k))
+    const cG = await safeMPECDH3.prep(alice.address).then(([_, k]) => buf(k))
     const cGa = scalarMult(a.secretKey, cG)
-    await safeMPX255193.connect(alice).step(cGa)
-    await safeMPX255193.connect(alice).done()
+    await safeMPECDH3.connect(alice).step(cGa)
 
-    const _aGb = await safeMPX255193
+    const _aGb = await safeMPECDH3
       .prep(charlie.address)
       .then(([_, k]) => buf(k))
     const aGbc = hex(scalarMult(c.secretKey, _aGb))
 
-    const _bGc = await safeMPX255193
-      .prep(alice.address)
-      .then(([_, k]) => buf(k))
+    const _bGc = await safeMPECDH3.prep(alice.address).then(([_, k]) => buf(k))
     const bGca = hex(scalarMult(a.secretKey, _bGc))
 
-    const _cGa = await safeMPX255193.prep(bob.address).then(([_, k]) => buf(k))
+    const _cGa = await safeMPECDH3.prep(bob.address).then(([_, k]) => buf(k))
     const cGab = hex(scalarMult(b.secretKey, _cGa))
 
     expect(aGbc).to.equal(bGca)
@@ -145,11 +135,11 @@ describe('SafeMPX25519', function () {
   })
 
   it('should yield a shared secret after a threesome ceremony', async function () {
-    const { alice, bob, charlie, safeMPX255193 } =
+    const { alice, bob, charlie, safeMPECDH3 } =
       await loadFixture(MPX25519Fixture)
     const signers = [alice, bob, charlie]
 
-    const choreo = await ceremony(await safeMPX255193.getAddress())
+    const choreo = await ceremony(await safeMPECDH3.getAddress())
     for (const signer of signers) {
       await choreo.step0(signer)
     }
@@ -167,11 +157,11 @@ describe('SafeMPX25519', function () {
   })
 
   it('should yield a shared secret after a fivesome ceremony', async function () {
-    const { alice, bob, charlie, dave, eve, safeMPX255195 } =
+    const { alice, bob, charlie, dave, eve, safeMPECDH5 } =
       await loadFixture(MPX25519Fixture)
     const signers = [alice, bob, charlie, dave, eve]
 
-    const choreo = await ceremony(await safeMPX255195.getAddress())
+    const choreo = await ceremony(await safeMPECDH5.getAddress())
     for (const signer of signers) {
       await choreo.step0(signer)
     }
@@ -188,59 +178,55 @@ describe('SafeMPX25519', function () {
     expect(signers.every(s => s.sharedSecret === expected)).to.be.true
   })
 
-  //TODO submit randomly
-  //TODO test submit twice (to correct)
-  it('should allow correcting a step', async function () {
-    const { alice, bob, charlie, safeMPX255193 } =
+  //WONTFIX=>> step correction wont be possibl
+  it.skip('should allow correcting a step', async function () {
+    const { alice, bob, charlie, safeMPECDH3 } =
       await loadFixture(MPX25519Fixture)
 
     const a = await kdf(alice)
     const b = await kdf(bob)
     const c = await kdf(charlie)
 
-    await safeMPX255193.connect(alice).step(a.publicKey)
-    await safeMPX255193.connect(alice).done()
+    await safeMPECDH3.connect(alice).step(a.publicKey)
+    await safeMPECDH3.connect(alice).done()
 
-    await safeMPX255193.connect(bob).step(b.publicKey)
-    await safeMPX255193.connect(bob).done()
+    await safeMPECDH3.connect(bob).step(b.publicKey)
+    await safeMPECDH3.connect(bob).done()
 
-    await safeMPX255193.connect(charlie).step(c.publicKey)
-    await safeMPX255193.connect(charlie).done()
+    await safeMPECDH3.connect(charlie).step(c.publicKey)
+    await safeMPECDH3.connect(charlie).done()
 
-    const aG = await safeMPX255193.prep(bob.address).then(([_, k]) => buf(k))
+    const aG = await safeMPECDH3.prep(bob.address).then(([_, k]) => buf(k))
     const aGb = scalarMult(b.secretKey, aG)
-    await safeMPX255193.connect(bob).step(Buffer.alloc(32))
-    await safeMPX255193.connect(bob).step(aGb)
-    await safeMPX255193.connect(bob).done()
+    await safeMPECDH3.connect(bob).step(Buffer.alloc(32))
+    await safeMPECDH3.connect(bob).step(aGb)
+    await safeMPECDH3.connect(bob).done()
 
-    const bG = await safeMPX255193
-      .prep(charlie.address)
-      .then(([_, k]) => buf(k))
+    const bG = await safeMPECDH3.prep(charlie.address).then(([_, k]) => buf(k))
     const bGc = scalarMult(c.secretKey, bG)
-    await safeMPX255193.connect(charlie).step(bGc)
-    await safeMPX255193.connect(charlie).done()
+    await safeMPECDH3.connect(charlie).step(bGc)
+    await safeMPECDH3.connect(charlie).done()
 
-    const cG = await safeMPX255193.prep(alice.address).then(([_, k]) => buf(k))
+    const cG = await safeMPECDH3.prep(alice.address).then(([_, k]) => buf(k))
     const cGa = scalarMult(a.secretKey, cG)
-    await safeMPX255193.connect(alice).step(cGa)
-    await safeMPX255193.connect(alice).done()
+    await safeMPECDH3.connect(alice).step(cGa)
+    await safeMPECDH3.connect(alice).done()
 
-    const _aGb = await safeMPX255193
+    const _aGb = await safeMPECDH3
       .prep(charlie.address)
       .then(([_, k]) => buf(k))
     const aGbc = hex(scalarMult(c.secretKey, _aGb))
 
-    const _bGc = await safeMPX255193
-      .prep(alice.address)
-      .then(([_, k]) => buf(k))
+    const _bGc = await safeMPECDH3.prep(alice.address).then(([_, k]) => buf(k))
     const bGca = hex(scalarMult(a.secretKey, _bGc))
 
-    const _cGa = await safeMPX255193.prep(bob.address).then(([_, k]) => buf(k))
+    const _cGa = await safeMPECDH3.prep(bob.address).then(([_, k]) => buf(k))
     const cGab = hex(scalarMult(b.secretKey, _cGa))
 
     expect(aGbc).to.equal(bGca)
     expect(bGca).to.equal(cGab)
   })
 
+  //TODO test submit randomly
   //TODO test reconstruct
 })
