@@ -19,8 +19,8 @@ describe('SafeMPECDH', function () {
       3
     )
 
-    await safeMock3.connect(alice).deploySafeMPECDH()
-    await safeMock5.connect(alice).deploySafeMPECDH()
+    await safeMock3.connect(alice).deployMPECDH()
+    await safeMock5.connect(alice).deployMPECDH()
 
     const SafeMPECDH = await ethers.getContractFactory('SafeMPECDH')
     const safeMPECDH3 = SafeMPECDH.attach(await safeMock3.safeMPECDH())
@@ -178,7 +178,7 @@ describe('SafeMPECDH', function () {
     expect(signers.every(s => s.sharedSecret === expected)).to.be.true
   })
 
-  //WONTFIX=>> step correction wont be possibl
+  //WONTFIX=>> step correction wont be possibl => reconstruct()
   it.skip('should allow correcting a step', async function () {
     const { alice, bob, charlie, safeMPECDH3 } =
       await loadFixture(MPX25519Fixture)
@@ -227,6 +227,73 @@ describe('SafeMPECDH', function () {
     expect(bGca).to.equal(cGab)
   })
 
-  //TODO test submit randomly
-  //TODO test reconstruct
+  it('should yield a shared secret after unorderered intra-round submissions', async function () {
+    const { alice, bob, charlie, dave, eve, safeMPECDH5 } =
+      await loadFixture(MPX25519Fixture)
+    const signers = [alice, bob, charlie, dave, eve]
+
+    const choreo = await ceremony(await safeMPECDH5.getAddress())
+    for (let i = signers.length - 1; i > -1; i--) {
+      // reverse vs order
+      await choreo.step0(signers[i])
+    }
+    for (let i = 0; i < signers.length - 2; i++) {
+      for (const signer of signers) {
+        await choreo.stepN(signer)
+      }
+    }
+    for (let i = signers.length - 1; i > -1; i--) {
+      // reverse vs order
+      signers[i].sharedSecret = await choreo.stepX(signers[i])
+    }
+
+    const expected = signers[0].sharedSecret
+    expect(signers.every(s => s.sharedSecret === expected)).to.be.true
+  })
+
+  it('should allow reconstruction', async function () {
+    const { alice, bob, charlie, safeMPECDH3, safeMock3 } =
+      await loadFixture(MPX25519Fixture)
+    const signers = [alice, bob, charlie]
+    const mpecdhAddress = await safeMPECDH3.getAddress()
+
+    const choreo = await ceremony(mpecdhAddress)
+    for (const signer of signers) {
+      await choreo.step0(signer)
+    }
+    for (let i = 0; i < signers.length - 2; i++) {
+      // 1st signer submits trash
+      const MPECDH = await ethers.getContractFactory('SafeMPECDH')
+      const mpecdh = MPECDH.attach(mpecdhAddress)
+      await mpecdh.connect(signers[0]).step(Buffer.alloc(32))
+
+      for (const signer of signers.slice(1)) {
+        await choreo.stepN(signer)
+      }
+    }
+    for (const signer of signers) {
+      signer.sharedSecret = await choreo.stepX(signer)
+    }
+
+    // with 1st signer submitting trash 2nd signer receives it
+    const trash = signers[1].sharedSecret
+
+    await safeMock3.connect(alice).reconstructMPECDH()
+
+    for (const signer of signers) {
+      await choreo.step0(signer)
+    }
+    for (let i = 0; i < signers.length - 2; i++) {
+      for (const signer of signers) {
+        await choreo.stepN(signer)
+      }
+    }
+    for (const signer of signers) {
+      signer.sharedSecret = await choreo.stepX(signer)
+    }
+
+    const expected = signers[0].sharedSecret
+    expect(signers.every(s => s.sharedSecret !== trash)).to.be.true
+    expect(signers.every(s => s.sharedSecret === expected)).to.be.true
+  })
 })

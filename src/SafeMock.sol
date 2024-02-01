@@ -11,7 +11,11 @@ contract SafeMock is SafeOwnerManager {
         setupOwners(_owners, _treshold);
     }
 
-    function deploySafeMPECDH() public {
+    function deployMPECDH() public {
         safeMPECDH = address(new SafeMPECDH());
+    }
+
+    function reconstructMPECDH() public {
+        SafeMPECDH(safeMPECDH).reconstruct();
     }
 }
