@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
 /// @dev MPECDH facilitates multi-party ECDH.
 abstract contract MPECDH {
@@ -133,6 +133,22 @@ abstract contract MPECDH {
         } else {
             return _sourceSlot + 1;
         }
+    }
+
+    /**
+     * @dev Lists all signers that have intermediary key contributions
+     * pending for the current round.
+     * @return _signers Array of Safe signers
+     */
+    function blocking() public view returns (address[] memory _signers) {
+        // // let _max = max(signers.ques.length)
+        // // let _signers = []
+        // for (uint256 _i = 0; _i < signers.length; _i++) {
+        //     if (queues[target(source(signers[i]))] < _max) {
+        //         // _signers.push(signers[i])
+        //     }
+        // }
+        // return _signers;
     }
 
     /**

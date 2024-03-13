@@ -156,6 +156,34 @@ describe('SafeMPECDH', function () {
     expect(signers.every(s => s.sharedSecret === expected)).to.be.true
   })
 
+  it('should report blocking round contributors during ceremony', async function () {
+    const { alice, bob, charlie, safeMPECDH3 } =
+      await loadFixture(MPX25519Fixture)
+    const signers = [alice, bob, charlie]
+
+    const choreo = await ceremony(await safeMPECDH3.getAddress())
+    for (const signer of signers) {
+      await choreo.step0(signer)
+    }
+
+    await choreo.stepN(alice)
+    let blocking = await safeMPECDH3.blocking()
+    expect(blocking).to.deep.equal([bob.address, charlie.address])
+    await choreo.stepN(bob)
+    blocking = await safeMPECDH3.blocking()
+    expect(blocking).to.deep.equal([charlie.address])
+    await choreo.stepN(charlie)
+    blocking = await safeMPECDH3.blocking()
+    expect(blocking).to.deep.equal([])
+
+    for (const signer of signers) {
+      signer.sharedSecret = await choreo.stepX(signer)
+    }
+
+    const expected = signers[0].sharedSecret
+    expect(signers.every(s => s.sharedSecret === expected)).to.be.true
+  })
+
   it('should yield a shared secret after a fivesome ceremony', async function () {
     const { alice, bob, charlie, dave, eve, safeMPECDH5 } =
       await loadFixture(MPX25519Fixture)
