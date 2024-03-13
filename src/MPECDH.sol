@@ -141,14 +141,24 @@ abstract contract MPECDH {
      * @return _signers Array of Safe signers
      */
     function blocking() public view returns (address[] memory _signers) {
-        // // let _max = max(signers.ques.length)
-        // // let _signers = []
-        // for (uint256 _i = 0; _i < signers.length; _i++) {
-        //     if (queues[target(source(signers[i]))] < _max) {
-        //         // _signers.push(signers[i])
-        //     }
-        // }
-        // return _signers;
+        uint256 _maxQueueLen = 0;
+        uint256 _pendingCount = 0;
+        for (uint256 _i = 0; _i < signers.length; _i++) {
+            if (queues[_i].length > _maxQueueLen) {
+                _maxQueueLen = queues[_i].length;
+            } else if (queues[_i].length < _maxQueueLen) {
+                _pendingCount++;
+            }
+        }
+        // console.log pendingCount
+        _signers = new address[](_pendingCount);
+        uint256 _j = 0;
+        for (uint256 _i = 0; _i < signers.length; _i++) {
+            if (queues[target(source(signers[_i]))].length < _maxQueueLen) {
+                _signers[_j++] = signers[_i];
+            }
+        }
+        return _signers;
     }
 
     /**
