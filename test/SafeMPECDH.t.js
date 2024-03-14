@@ -222,55 +222,6 @@ describe('SafeMPECDH', function () {
     expect(signers.every(s => s.sharedSecret === expected)).to.be.true
   })
 
-  //WONTFIX=>> step correction wont be possibl => reconstruct()
-  it.skip('should allow correcting a step', async function () {
-    const { alice, bob, charlie, safeMPECDH3 } =
-      await loadFixture(MPX25519Fixture)
-
-    const a = await kdf(alice)
-    const b = await kdf(bob)
-    const c = await kdf(charlie)
-
-    await safeMPECDH3.connect(alice).step(a.publicKey)
-    await safeMPECDH3.connect(alice).done()
-
-    await safeMPECDH3.connect(bob).step(b.publicKey)
-    await safeMPECDH3.connect(bob).done()
-
-    await safeMPECDH3.connect(charlie).step(c.publicKey)
-    await safeMPECDH3.connect(charlie).done()
-
-    const aG = await safeMPECDH3.prep(bob.address).then(([_, k]) => buf(k))
-    const aGb = scalarMult(b.secretKey, aG)
-    await safeMPECDH3.connect(bob).step(Buffer.alloc(32))
-    await safeMPECDH3.connect(bob).step(aGb)
-    await safeMPECDH3.connect(bob).done()
-
-    const bG = await safeMPECDH3.prep(charlie.address).then(([_, k]) => buf(k))
-    const bGc = scalarMult(c.secretKey, bG)
-    await safeMPECDH3.connect(charlie).step(bGc)
-    await safeMPECDH3.connect(charlie).done()
-
-    const cG = await safeMPECDH3.prep(alice.address).then(([_, k]) => buf(k))
-    const cGa = scalarMult(a.secretKey, cG)
-    await safeMPECDH3.connect(alice).step(cGa)
-    await safeMPECDH3.connect(alice).done()
-
-    const _aGb = await safeMPECDH3
-      .prep(charlie.address)
-      .then(([_, k]) => buf(k))
-    const aGbc = hex(scalarMult(c.secretKey, _aGb))
-
-    const _bGc = await safeMPECDH3.prep(alice.address).then(([_, k]) => buf(k))
-    const bGca = hex(scalarMult(a.secretKey, _bGc))
-
-    const _cGa = await safeMPECDH3.prep(bob.address).then(([_, k]) => buf(k))
-    const cGab = hex(scalarMult(b.secretKey, _cGa))
-
-    expect(aGbc).to.equal(bGca)
-    expect(bGca).to.equal(cGab)
-  })
-
   it('should yield a shared secret after unorderered intra-round submissions', async function () {
     const { alice, bob, charlie, dave, eve, safeMPECDH5 } =
       await loadFixture(MPX25519Fixture)
