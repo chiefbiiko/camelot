@@ -169,10 +169,10 @@ describe('SafeMPECDH', function () {
     // round 0
     let blocking = await safeMPECDH3.blocking()
     expect(blocking).to.deep.equal([])
-    await choreo.step0(alice)
-    blocking = await safeMPECDH3.blocking()
-    expect(blocking).to.deep.equal([bob.address, charlie.address])
     await choreo.step0(bob)
+    blocking = await safeMPECDH3.blocking()
+    expect(blocking).to.deep.equal([alice.address, charlie.address])
+    await choreo.step0(alice)
     blocking = await safeMPECDH3.blocking()
     expect(blocking).to.deep.equal([charlie.address])
     await choreo.step0(charlie)
