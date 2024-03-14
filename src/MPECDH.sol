@@ -142,15 +142,17 @@ abstract contract MPECDH {
      */
     function blocking() public view returns (address[] memory _signers) {
         uint256 _maxQueueLen = 0;
-        uint256 _pendingCount = 0;
         for (uint256 _i = 0; _i < signers.length; _i++) {
             if (queues[_i].length > _maxQueueLen) {
                 _maxQueueLen = queues[_i].length;
-            } else if (queues[_i].length < _maxQueueLen) {
+            }
+        }
+        uint256 _pendingCount = 0;
+        for (uint256 _i = 0; _i < signers.length; _i++) {
+            if (queues[_i].length < _maxQueueLen) {
                 _pendingCount++;
             }
         }
-        // console.log pendingCount
         _signers = new address[](_pendingCount);
         uint256 _j = 0;
         for (uint256 _i = 0; _i < signers.length; _i++) {
