@@ -162,12 +162,28 @@ describe('SafeMPECDH', function () {
     const signers = [alice, bob, charlie]
 
     const choreo = await ceremony(await safeMPECDH3.getAddress())
-    for (const signer of signers) {
-      await choreo.step0(signer)
-    }
+    // at every fresh round start blocking() is empty
+    // once the first intermediate key within a round has been posted
+    // blocking() reports remaining round contributors
 
-    await choreo.stepN(alice)
+    // round 0
     let blocking = await safeMPECDH3.blocking()
+    expect(blocking).to.deep.equal([])
+    await choreo.step0(alice)
+    blocking = await safeMPECDH3.blocking()
+    expect(blocking).to.deep.equal([bob.address, charlie.address])
+    await choreo.step0(bob)
+    blocking = await safeMPECDH3.blocking()
+    expect(blocking).to.deep.equal([charlie.address])
+    await choreo.step0(charlie)
+    blocking = await safeMPECDH3.blocking()
+    expect(blocking).to.deep.equal([])
+
+    // round n
+    blocking = await safeMPECDH3.blocking()
+    expect(blocking).to.deep.equal([])
+    await choreo.stepN(alice)
+    blocking = await safeMPECDH3.blocking()
     expect(blocking).to.deep.equal([bob.address, charlie.address])
     await choreo.stepN(bob)
     blocking = await safeMPECDH3.blocking()
