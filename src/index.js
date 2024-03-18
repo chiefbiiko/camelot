@@ -31,6 +31,9 @@ async function ceremony(mpecdhAddress) {
   const MPECDH = await ethers.getContractFactory('SafeMPECDH')
   const mpecdh = MPECDH.attach(mpecdhAddress)
   return {
+    async blocking() {
+      return mpecdh.blocking()
+    },
     async status(signer) {
       const [status] = await mpecdh.prep(signer.address)
       return Number(status)
