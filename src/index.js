@@ -10,10 +10,6 @@ function generateKeyPairFromSeed(seed) {
   }
 }
 
-function _scalarMult(priv, pub) {
-  return x25519.scalarMult(priv, pub)
-}
-
 function bigint2buf(b, len) {
   if (typeof b !== 'bigint') {
     b = BigInt(b)
@@ -36,7 +32,7 @@ function buf(s) {
 
 async function kdf(signer) {
   const seed = await signer
-    .signMessage('CAMELOT_KDF_SEED')
+    .signMessage('MPECDH_KDF_SEED')
     .then(signedMsg =>
       Buffer.from(keccak256(signedMsg).replace('0x', ''), 'hex')
     )
@@ -46,7 +42,7 @@ async function kdf(signer) {
 function scalarMult(a, b) {
   if (typeof a === 'string') a = Buffer.from(a.replace('0x', ''), 'hex')
   if (typeof b === 'string') b = Buffer.from(b.replace('0x', ''), 'hex')
-  return Buffer.from(_scalarMult(a, b))
+  return Buffer.from(x25519.scalarMult(a, b))
 }
 
 async function ceremony(mpecdhAddress) {
