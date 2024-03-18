@@ -1,8 +1,30 @@
 const { keccak256 } = require('ethers')
-const {
-  generateKeyPairFromSeed,
-  scalarMult: _scalarMult
-} = require('@stablelib/x25519')
+const { x25519, hashToCurve } = require('@noble/curves/ed25519')
+
+function generateKeyPairFromSeed(seed) {
+  const p = hashToCurve(seed)
+  const priv = bigint2buf(p.x, 32)
+  return {
+    secretKey: priv,
+    publicKey: x25519.scalarMultBase(priv)
+  }
+}
+
+function _scalarMult(priv, pub) {
+  return x25519.scalarMult(priv, pub)
+}
+
+function bigint2buf(b, len) {
+  if (typeof b !== 'bigint') {
+    b = BigInt(b)
+  }
+  const out = Buffer.alloc(len)
+  for (let i = len - 1; i >= 0; --i) {
+    out[i] = Number(b & 255n)
+    b >>= 8n
+  }
+  return out
+}
 
 function hex(b) {
   return Buffer.from(b).toString('hex')

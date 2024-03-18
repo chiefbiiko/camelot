@@ -260,7 +260,9 @@ describe('SafeMPECDH', function () {
       // 1st signer submits trash
       const MPECDH = await ethers.getContractFactory('SafeMPECDH')
       const mpecdh = MPECDH.attach(mpecdhAddress)
-      await mpecdh.connect(signers[0]).step(Buffer.alloc(32))
+      await mpecdh
+        .connect(signers[0])
+        .step(Buffer.from('00'.repeat(31) + '01', 'hex'))
 
       for (const signer of signers.slice(1)) {
         await choreo.stepN(signer)
