@@ -167,29 +167,29 @@ describe('SafeMPECDH', function () {
     // blocking() reports remaining round contributors
 
     // round 0
-    let blocking = await safeMPECDH3.blocking()
+    let blocking = await choreo.blocking()
     expect(blocking).to.deep.equal([])
     await choreo.step0(bob)
-    blocking = await safeMPECDH3.blocking()
+    blocking = await choreo.blocking()
     expect(blocking).to.deep.equal([alice.address, charlie.address])
     await choreo.step0(alice)
-    blocking = await safeMPECDH3.blocking()
+    blocking = await choreo.blocking()
     expect(blocking).to.deep.equal([charlie.address])
     await choreo.step0(charlie)
-    blocking = await safeMPECDH3.blocking()
+    blocking = await choreo.blocking()
     expect(blocking).to.deep.equal([])
 
     // round n
-    blocking = await safeMPECDH3.blocking()
+    blocking = await choreo.blocking()
     expect(blocking).to.deep.equal([])
     await choreo.stepN(alice)
-    blocking = await safeMPECDH3.blocking()
+    blocking = await choreo.blocking()
     expect(blocking).to.deep.equal([bob.address, charlie.address])
     await choreo.stepN(bob)
-    blocking = await safeMPECDH3.blocking()
+    blocking = await choreo.blocking()
     expect(blocking).to.deep.equal([charlie.address])
     await choreo.stepN(charlie)
-    blocking = await safeMPECDH3.blocking()
+    blocking = await choreo.blocking()
     expect(blocking).to.deep.equal([])
 
     for (const signer of signers) {
