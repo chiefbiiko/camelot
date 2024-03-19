@@ -31,6 +31,8 @@
   },
   "dependencies": {
     "@noble/curves": "^1.4.0",
+    "@safe-global/api-kit": "^2.2.0",
+    "@safe-global/protocol-kit": "^3.0.1",
     "ethers": "^6.9.0"
   }
 }
