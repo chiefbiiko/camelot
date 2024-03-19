@@ -1,8 +1,8 @@
 {
-  "name": "camelot",
-  "version": "0.0.0",
+  "name": "mpecdh",
+  "version": "0.0.1",
   "description": "Safe seed generated via multi-party ECDH",
-  "main": "index.js",
+  "main": "src/index.js",
   "directories": {
     "lib": "lib",
     "test": "test"
