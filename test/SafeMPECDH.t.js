@@ -36,6 +36,7 @@ describe('SafeMPECDH', function () {
       dave,
       eve,
       ferdie,
+      provider: ethers.provider,
       safeMock3,
       safeMock5,
       safeMPECDH3,
@@ -135,11 +136,11 @@ describe('SafeMPECDH', function () {
   })
 
   it('should yield a shared secret after a threesome ceremony', async function () {
-    const { alice, bob, charlie, safeMPECDH3 } =
+    const { alice, bob, charlie, safeMPECDH3, provider } =
       await loadFixture(MPX25519Fixture)
     const signers = [alice, bob, charlie]
 
-    const choreo = await ceremony(await safeMPECDH3.getAddress())
+    const choreo = await ceremony(await safeMPECDH3.getAddress(),provider )
     for (const signer of signers) {
       await choreo.step0(signer)
     }
@@ -157,11 +158,11 @@ describe('SafeMPECDH', function () {
   })
 
   it('should report blocking round contributors during ceremony', async function () {
-    const { alice, bob, charlie, safeMPECDH3 } =
+    const { alice, bob, charlie, safeMPECDH3, provider } =
       await loadFixture(MPX25519Fixture)
     const signers = [alice, bob, charlie]
 
-    const choreo = await ceremony(await safeMPECDH3.getAddress())
+    const choreo = await ceremony(await safeMPECDH3.getAddress(), provider)
     // at every fresh round start blocking() is empty
     // once the first intermediate key within a round has been posted
     // blocking() reports remaining round contributors
@@ -201,11 +202,11 @@ describe('SafeMPECDH', function () {
   })
 
   it('should yield a shared secret after a fivesome ceremony', async function () {
-    const { alice, bob, charlie, dave, eve, safeMPECDH5 } =
+    const { alice, bob, charlie, dave, eve, safeMPECDH5, provider } =
       await loadFixture(MPX25519Fixture)
     const signers = [alice, bob, charlie, dave, eve]
 
-    const choreo = await ceremony(await safeMPECDH5.getAddress())
+    const choreo = await ceremony(await safeMPECDH5.getAddress(), provider)
     for (const signer of signers) {
       await choreo.step0(signer)
     }
@@ -223,11 +224,11 @@ describe('SafeMPECDH', function () {
   })
 
   it('should yield a shared secret after unorderered intra-round submissions', async function () {
-    const { alice, bob, charlie, dave, eve, safeMPECDH5 } =
+    const { alice, bob, charlie, dave, eve, safeMPECDH5, provider } =
       await loadFixture(MPX25519Fixture)
     const signers = [alice, bob, charlie, dave, eve]
 
-    const choreo = await ceremony(await safeMPECDH5.getAddress())
+    const choreo = await ceremony(await safeMPECDH5.getAddress(), provider)
     for (let i = signers.length - 1; i > -1; i--) {
       // reverse vs order
       await choreo.step0(signers[i])
@@ -247,12 +248,12 @@ describe('SafeMPECDH', function () {
   })
 
   it('should allow reconstruction', async function () {
-    const { alice, bob, charlie, safeMPECDH3, safeMock3 } =
+    const { alice, bob, charlie, safeMPECDH3, safeMock3, provider } =
       await loadFixture(MPX25519Fixture)
     const signers = [alice, bob, charlie]
     const mpecdhAddress = await safeMPECDH3.getAddress()
 
-    const choreo = await ceremony(mpecdhAddress)
+    const choreo = await ceremony(mpecdhAddress, provider)
     for (const signer of signers) {
       await choreo.step0(signer)
     }

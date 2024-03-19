@@ -2,6 +2,7 @@ const ethers = require('ethers')
 const { x25519, hashToCurve } = require('@noble/curves/ed25519')
 const { default: Safe, EthersAdapter } = require("@safe-global/protocol-kit")
 const { default: SafeApiKit } = require("@safe-global/api-kit")
+const { abi, deployedBytecode } = require("./SafeMPECDH.json")
 
 function generateKeyPairFromSeed(seed) {
   const p = hashToCurve(seed)
@@ -47,8 +48,8 @@ function scalarMult(a, b) {
   return Buffer.from(x25519.scalarMult(a, b))
 }
 
-async function ceremony(mpecdhAddress) {
-  const MPECDH = await ethers.getContractFactory('SafeMPECDH')
+async function ceremony(mpecdhAddress, provider) {
+  const MPECDH = new ethers.ContractFactory(abi, deployedBytecode, { provider: typeof provider === "string" ? new ethers.JsonRpcProvider(provider) : provider })
   const mpecdh = MPECDH.attach(mpecdhAddress)
   return {
     async blocking() {
