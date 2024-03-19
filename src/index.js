@@ -1,8 +1,8 @@
 const ethers = require('ethers')
 const { x25519, hashToCurve } = require('@noble/curves/ed25519')
-const { default: Safe, EthersAdapter } = require("@safe-global/protocol-kit")
-const { default: SafeApiKit } = require("@safe-global/api-kit")
-const { abi, deployedBytecode } = require("./SafeMPECDH.json")
+const { default: Safe, EthersAdapter } = require('@safe-global/protocol-kit')
+const { default: SafeApiKit } = require('@safe-global/api-kit')
+const { abi, bytecode, deployedBytecode } = require('./SafeMPECDH.json')
 
 function generateKeyPairFromSeed(seed) {
   const p = hashToCurve(seed)
@@ -49,7 +49,12 @@ function scalarMult(a, b) {
 }
 
 async function ceremony(mpecdhAddress, provider) {
-  const MPECDH = new ethers.ContractFactory(abi, deployedBytecode, { provider: typeof provider === "string" ? new ethers.JsonRpcProvider(provider) : provider })
+  const MPECDH = new ethers.ContractFactory(abi, deployedBytecode, {
+    provider:
+      typeof provider === 'string'
+        ? new ethers.JsonRpcProvider(provider)
+        : provider
+  })
   const mpecdh = MPECDH.attach(mpecdhAddress)
   return {
     async blocking() {
@@ -83,21 +88,17 @@ async function ceremony(mpecdhAddress, provider) {
   }
 }
 
-async function proposeDeploySafeMPECDH(safeAddress, signer) {
+async function proposeDeploySafeMPECDH(signer, safeAddress) {
   const ethAdapter = new EthersAdapter({ ethers, signerOrProvider: signer })
   const safeSigner = await Safe.create({ ethAdapter, safeAddress })
-  //TOD-O
-  // const rawData = new ethers.Interface([
-  //   "function signMessage(bytes calldata _data)"
-  // ]).encodeFunctionData("signMessage", [Buffer.from(process.env.MSG, "utf8")])
-  const safeTransactionData = {
-    // to: SIGN_MSG_LIB, TODO
-    data: rawData,
+  const safeTxData = {
+    to: undefined,
+    data: bytecode,
     operation: 0, // call
     value: 0
   }
   const safeTx = await safeSigner.createTransaction({
-    transactions: [safeTransactionData]
+    transactions: [safeTxData]
   })
   const apiKit = new SafeApiKit({ chainId: 100 })
   // Deterministic hash based on transaction parameters
@@ -118,5 +119,6 @@ module.exports = {
   buf,
   kdf,
   scalarMult,
-  ceremony
+  ceremony,
+  proposeDeploySafeMPECDH
 }
