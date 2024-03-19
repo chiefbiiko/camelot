@@ -140,7 +140,7 @@ describe('SafeMPECDH', function () {
       await loadFixture(MPX25519Fixture)
     const signers = [alice, bob, charlie]
 
-    const choreo = await ceremony(await safeMPECDH3.getAddress(),provider )
+    const choreo = await ceremony(await safeMPECDH3.getAddress(), provider)
     for (const signer of signers) {
       await choreo.step0(signer)
     }
