@@ -21,7 +21,7 @@ function calculateSalt(safeAddress) {
   return ethers.keccak256(safeAddress + '00')
 }
 
-function calculateSafeMPECDHAddress(
+function calcMPECDHAddress(
   safeAddress,
   _create2Caller = CREATE_CALL_LIB
 ) {
@@ -34,7 +34,11 @@ function calculateSafeMPECDHAddress(
   )
 }
 
-function assembleDeploySafeMPECDH(
+async function hasMPECDH(safeAddress) {
+
+}
+
+function createDeployMPECDH(
   safeAddress,
   _create2Caller = CREATE_CALL_LIB
 ) {
@@ -53,14 +57,14 @@ function assembleDeploySafeMPECDH(
   return safeTxData
 }
 
-async function proposeDeploySafeMPECDH(
+async function proposeDeployMPECDH(
   signer,
   safeAddress,
   _create2Caller = CREATE_CALL_LIB
 ) {
   const ethAdapter = new EthersAdapter({ ethers, signerOrProvider: signer })
   const safeSigner = await Safe.create({ ethAdapter, safeAddress })
-  const safeTxData = assembleDeploySafeMPECDH(safeAddress, _create2Caller)
+  const safeTxData = createDeployMPECDH(safeAddress, _create2Caller)
   const safeTx = await safeSigner.createTransaction({
     transactions: [safeTxData]
   })
@@ -82,7 +86,7 @@ async function proposeDeploySafeMPECDH(
   return {
     safeTxHash,
     safeAddress,
-    mpecdhAddress: calculateSafeMPECDHAddress(safeAddress)
+    mpecdhAddress: calcMPECDHAddress(safeAddress)
   }
 }
 
@@ -176,7 +180,7 @@ module.exports = {
   kdf,
   scalarMult,
   ceremony,
-  calculateSafeMPECDHAddress,
-  assembleDeploySafeMPECDH,
-  proposeDeploySafeMPECDH
+  calcMPECDHAddress,
+  createDeployMPECDH,
+  proposeDeployMPECDH
 }

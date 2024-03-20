@@ -9,8 +9,8 @@ const {
   ceremony,
   hex,
   buf,
-  calculateSafeMPECDHAddress,
-  assembleDeploySafeMPECDH
+  calcMPECDHAddress,
+  createDeployMPECDH
 } = require('../src')
 
 async function deploy(contractName, ...args) {
@@ -322,7 +322,7 @@ describe('SafeMPECDH', function () {
     const create2Caller = await createCallLib.getAddress()
 
     // calculate counterfactual create2 address
-    const create2Address = calculateSafeMPECDHAddress(
+    const create2Address = calcMPECDHAddress(
       safeAddress,
       create2Caller
     )
@@ -332,7 +332,7 @@ describe('SafeMPECDH', function () {
 
     // assemble and broadcast the create2 deployment tx
     // this corresponds to executing the Safe tx once it has been confirmed
-    const tx = assembleDeploySafeMPECDH(safeAddress, create2Caller)
+    const tx = createDeployMPECDH(safeAddress, create2Caller)
     await alice.sendTransaction(tx).then(res => res.wait())
 
     deployedBytecode = await provider.getCode(create2Address)
