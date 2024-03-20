@@ -18,4 +18,24 @@ contract SafeMock is SafeOwnerManager {
     function reconstructMPECDH() public {
         SafeMPECDH(safeMPECDH).reconstruct();
     }
+
+    function performCreate2(
+        uint256 value,
+        bytes memory deploymentData,
+        bytes32 salt
+    ) public returns (address newContract) {
+        /* solhint-disable no-inline-assembly */
+        /// @solidity memory-safe-assembly
+        assembly {
+            newContract := create2(
+                value,
+                add(0x20, deploymentData),
+                mload(deploymentData),
+                salt
+            )
+        }
+        /* solhint-enable no-inline-assembly */
+        require(newContract != address(0), "Could not deploy contract");
+        // emit ContractCreation(newContract);
+    }
 }
