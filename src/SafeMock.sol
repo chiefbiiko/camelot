@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.19;
 
 import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManager.sol";
 import { SafeMPECDH } from "./SafeMPECDH.sol";
@@ -12,10 +12,11 @@ contract SafeMock is SafeOwnerManager {
     }
 
     function deployMPECDH() public {
-        safeMPECDH = address(new SafeMPECDH());
+        safeMPECDH = address(new SafeMPECDH(address(this)));
     }
 
     function reconstructMPECDH() public {
         SafeMPECDH(safeMPECDH).reconstruct();
     }
 }
+ 

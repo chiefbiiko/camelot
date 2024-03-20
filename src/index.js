@@ -88,6 +88,9 @@ async function ceremony(mpecdhAddress, provider) {
   }
 }
 
+// For contract created by CREATE2 its address will be:
+
+// keccak256( 0xff ++ address(this) ++ salt ++ keccak256(init_code))[12:]
 async function proposeDeploySafeMPECDH(signer, safeAddress) {
   const ethAdapter = new EthersAdapter({ ethers, signerOrProvider: signer })
   const safeSigner = await Safe.create({ ethAdapter, safeAddress })
@@ -100,7 +103,8 @@ async function proposeDeploySafeMPECDH(signer, safeAddress) {
   const safeTx = await safeSigner.createTransaction({
     transactions: [safeTxData]
   })
-  const apiKit = new SafeApiKit({ chainId: 100 })
+  const chainId = await signer.provider.getNetwork().then(({chainId}) => chainId)
+  const apiKit = new SafeApiKit({ chainId })
   // Deterministic hash based on transaction parameters
   const safeTxHash = await safeSigner.getTransactionHash(safeTx)
   // Sign transaction to verify that the transaction is coming from owner 1
