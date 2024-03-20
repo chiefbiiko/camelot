@@ -10,7 +10,8 @@ const {
   hex,
   buf,
   calcMPECDHAddress,
-  createDeployMPECDH
+  createDeployMPECDH,
+  isReady,
 } = require('..')
 
 async function deploy(contractName, ...args) {
@@ -355,5 +356,30 @@ describe('SafeMPECDH', function () {
     }
     const expected = signers[0].sharedSecret
     expect(signers.every(s => s.sharedSecret === expected)).to.be.true
+  })
+
+  it('should be ready', async function () {
+    const { alice, bob, charlie, safeMPECDH3, provider } =
+      await loadFixture(MPX25519Fixture)
+    const signers = [alice, bob, charlie]
+  
+    const choreo = await ceremony(await safeMPECDH3.getAddress(), provider)
+    for (const signer of signers) {
+      await choreo.step0(signer)
+    }
+    for (let i = 0; i < signers.length - 2; i++) {
+      for (const signer of signers) {
+        await choreo.stepN(signer)
+      }
+    }
+    for (const signer of signers) {
+      signer.sharedSecret = await choreo.stepX(signer)
+    }
+  
+    const expected = signers[0].sharedSecret
+    expect(signers.every(s => s.sharedSecret === expected)).to.be.true
+  
+    const allDone = await isReady(await safeMPECDH3.master(), provider)
+    expect(allDone).to.be.true
   })
 })
