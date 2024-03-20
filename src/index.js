@@ -16,9 +16,9 @@ function encodeCtorArg(safeAddress) {
 }
 
 function calculateSalt(safeAddress) {
-  // NOTE trailing preimage byte is version - must be changed with every .sol 
+  // NOTE trailing preimage byte is version - must be changed with every .sol
   // version so that create2 redeployments of a MPECDH instance are possible
-  return ethers.keccak256(safeAddress + "00")
+  return ethers.keccak256(safeAddress + '00')
 }
 
 function calculateSafeMPECDHAddress(
