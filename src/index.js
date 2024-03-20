@@ -15,12 +15,18 @@ function encodeCtorArg(safeAddress) {
   return ctorArg.toString('hex')
 }
 
+function calculateSalt(safeAddress) {
+  // NOTE trailing preimage byte is version - must be changed with every .sol 
+  // version so that create2 redeployments of a MPECDH instance are possible
+  return ethers.keccak256(safeAddress + "00")
+}
+
 function calculateSafeMPECDHAddress(
   safeAddress,
   _create2Caller = CREATE_CALL_LIB
 ) {
   const initBytecode = bytecode + encodeCtorArg(safeAddress)
-  const salt = ethers.keccak256(safeAddress)
+  const salt = calculateSalt(safeAddress)
   return ethers.getCreate2Address(
     _create2Caller,
     salt,
@@ -33,7 +39,7 @@ function assembleDeploySafeMPECDH(
   _create2Caller = CREATE_CALL_LIB
 ) {
   const initBytecode = bytecode + encodeCtorArg(safeAddress)
-  const salt = ethers.keccak256(safeAddress)
+  const salt = calculateSalt(safeAddress)
   // deterministic deployment via create2 using keccak256(safe) as salt
   const data = new ethers.Contract(_create2Caller, [
     'function performCreate2(uint256 value, bytes memory deploymentData, bytes32 salt) public returns (address newContract)'
