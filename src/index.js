@@ -4,6 +4,8 @@ const { default: Safe, EthersAdapter } = require('@safe-global/protocol-kit')
 const { default: SafeApiKit } = require('@safe-global/api-kit')
 const { abi, bytecode, deployedBytecode } = require('./SafeMPECDH.json')
 
+const STATUS = { 0: "end", 1: "ok", 2: "idle" }
+
 const CREATE_CALL_LIB = '0x9b35Af71d77eaf8d7e40252370304687390A1A52'
 
 function encodeCtorArg(safeAddress) {
@@ -144,7 +146,7 @@ async function ceremony(mpecdhAddress, provider) {
     async stepN(signer) {
       const [status, preKey] = await mpecdh.prep(signer.address)
       if (status !== 1n) {
-        throw Error('expected status 1 got ' + status)
+        throw Error(`expected status ${STATUS[1]} got ${STATUS[status]}`)
       }
       const kp = await kdf(signer)
       const newKey = scalarMult(kp.secretKey, preKey)
@@ -153,7 +155,7 @@ async function ceremony(mpecdhAddress, provider) {
     async stepX(signer) {
       const [status, preKey] = await mpecdh.prep(signer.address)
       if (status !== 0n) {
-        throw Error('expected status 0 got ' + status)
+        throw Error(`expected status ${STATUS[0]} got ${STATUS[status]}`)
       }
       const kp = await kdf(signer)
       return '0x' + hex(scalarMult(kp.secretKey, preKey))
