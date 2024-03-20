@@ -6,14 +6,22 @@ const { abi, bytecode, deployedBytecode } = require('./SafeMPECDH.json')
 
 const CREATE_CALL_LIB = '0x9b35Af71d77eaf8d7e40252370304687390A1A52'
 
+function encodeCtorArg(safeAddress) {
+  const ctorArg = Buffer.alloc(32)
+  ctorArg.set(Buffer.from(safeAddress.replace("0x", ""), "hex"), 12)
+  return ctorArg.toString("hex")
+}
+
 function calculateSafeMPECDHAddress(
   safeAddress,
   _create2Caller = CREATE_CALL_LIB
 ) {
+  const initBytecode = bytecode + encodeCtorArg(safeAddress)
+  const salt = ethers.keccak256(safeAddress)
   return ethers.getCreate2Address(
     _create2Caller,
-    ethers.keccak256(safeAddress),
-    ethers.keccak256(bytecode)
+    salt,
+    ethers.keccak256(initBytecode)
   )
 }
 
@@ -22,8 +30,10 @@ function assembleDeploySafeMPECDH(
   safeAddress,
   _create2Caller = CREATE_CALL_LIB
 ) {
+  const initBytecode = bytecode + encodeCtorArg(safeAddress)
+  const salt = ethers.keccak256(safeAddress)
   // deterministic deployment via create2 using keccak256(safe) as salt
-  const data = new Contract(
+  const data = new ethers.Contract(
     _create2Caller,
     [
       'function performCreate2(uint256 value, bytes memory deploymentData, bytes32 salt) public returns (address newContract)'
@@ -33,8 +43,8 @@ function assembleDeploySafeMPECDH(
     }
   ).interface.encodeFunctionData('performCreate2', [
     0,
-    bytecode,
-    ethers.keccak256(safeAddress)
+    initBytecode,
+    salt
   ])
   const safeTxData = {
     to: _create2Caller,
