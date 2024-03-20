@@ -19,14 +19,14 @@ impl. There is a concrete [`SafeMPECDH`](./src/SafeMPECDH.sol) contract for use 
 
 ## Usage
 
-1. Deploy a `SafeMPECDH` instance via Safe (`proposeDeploySafeMPECDH`)
+1. Deploy a `SafeMPECDH` instance via Safe (`proposeDeployMPECDH`)
 
 2. Run the bootstrap ceremony with all signers (`step0` & `stepN`)
 
 3. Then each signer can derive the shared secret separately (`stepX`)
 
 ```js
-const { calculateSafeMPECDHAddress, proposeDeploySafeMPECDH, ceremony } = require("./src/index")
+const { calcMPECDHAddress, proposeDeployMPECDH, ceremony } = require("./src/index")
 
 const safeAddress = "some safe address"
 // in your dapp you will only have one ethers signer available but using 
@@ -34,10 +34,10 @@ const safeAddress = "some safe address"
 const signers = [alice, bob, charlie] = await ethers.getSigners()
 
 // we use create2 thru Safe's CreateCall lib for deterministic addresses
-const mpecdhAddress = calculateSafeMPECDHAddress(safeAddress)
+const mpecdhAddress = calcMPECDHAddress(safeAddress)
 
 // propose deployment of a SafeMPECDH instance at mpecdhAddress
-await proposeDeploySafeMPECDH(signer, safeAddress)
+await proposeDeployMPECDH(signer, safeAddress)
 
 // once enough signers have confirmed the tx and it got executed you should
 // run the MPECDH bootstrap ceremony
