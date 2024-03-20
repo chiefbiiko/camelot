@@ -11,7 +11,7 @@ const {
   buf,
   calcMPECDHAddress,
   createDeployMPECDH
-} = require('../src')
+} = require('..')
 
 async function deploy(contractName, ...args) {
   return ethers.getContractFactory(contractName).then(f => f.deploy(...args))

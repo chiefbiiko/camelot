@@ -15,5 +15,9 @@ module.exports = {
     hardhat: {
       chainId: 12345
     }
-  }
+  },
+  paths: {
+    sources: "./src",
+    tests: "./src/test",
+  },
 }
