@@ -9,10 +9,10 @@ const STATUS = { 0: 'end', 1: 'ok', 2: 'idle' }
 // https://github.com/safe-global/safe-smart-account/blob/main/CHANGELOG.md#lib-contracts
 const CREATE_CALL_LIB = '0x9b35Af71d77eaf8d7e40252370304687390A1A52'
 
-function encodeCtorArg(safeAddress) {
+function initBytecode(safeAddress) {
   const ctorArg = Buffer.alloc(32)
   ctorArg.set(Buffer.from(safeAddress.replace('0x', ''), 'hex'), 12)
-  return ctorArg.toString('hex')
+  return bytecode + ctorArg.toString('hex')
 }
 
 function calculateSalt(safeAddress) {
@@ -25,12 +25,12 @@ function calculateSafeMPECDHAddress(
   safeAddress,
   _create2Caller = CREATE_CALL_LIB
 ) {
-  const initBytecode = bytecode + encodeCtorArg(safeAddress)
+  const bytecode = initBytecode(safeAddress)
   const salt = calculateSalt(safeAddress)
   return ethers.getCreate2Address(
     _create2Caller,
     salt,
-    ethers.keccak256(initBytecode)
+    ethers.keccak256(bytecode)
   )
 }
 
@@ -38,12 +38,12 @@ function assembleDeploySafeMPECDH(
   safeAddress,
   _create2Caller = CREATE_CALL_LIB
 ) {
-  const initBytecode = bytecode + encodeCtorArg(safeAddress)
+  const bytecode = initBytecode(safeAddress)
   const salt = calculateSalt(safeAddress)
   // deterministic deployment via create2 using keccak256(safe) as salt
   const data = new ethers.Contract(_create2Caller, [
     'function performCreate2(uint256 value, bytes memory deploymentData, bytes32 salt) public returns (address newContract)'
-  ]).interface.encodeFunctionData('performCreate2', [0, initBytecode, salt])
+  ]).interface.encodeFunctionData('performCreate2', [0, bytecode, salt])
   const safeTxData = {
     to: _create2Caller,
     data,
