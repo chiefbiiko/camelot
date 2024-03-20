@@ -19,19 +19,37 @@ impl. There is a concrete [`SafeMPECDH`](./src/SafeMPECDH.sol) contract for use 
 
 ## Usage
 
-1. Deploy a `SafeMPECDH` instance via Safe
+1. Deploy a `SafeMPECDH` instance via Safe (`proposeDeploySafeMPECDH`)
 
 2. Run the bootstrap ceremony with all signers (`step0` & `stepN`)
 
 3. Then each signer can derive the shared secret separately (`stepX`)
 
 ```js
-const { ceremony } = require("./src/index")7
+const { calculateSafeMPECDHAddress, proposeDeploySafeMPECDH, ceremony } = require("./src/index")
 
-const mpecdhAddress = "0x1234..."
+const safeAddress = "some safe address"
+// in your dapp you will only have one ethers signer available but using 
+// three here to make the relation between number of rounds and signers clear
 const signers = [alice, bob, charlie] = await ethers.getSigners()
 
-const choreo = await ceremony(mpecdhAddress)
+// we use create2 thru Safe's CreateCall lib for deterministic addresses
+const mpecdhAddress = calculateSafeMPECDHAddress(safeAddress)
+
+// propose deployment of a SafeMPECDH instance at mpecdhAddress
+await proposeDeploySafeMPECDH(signer, safeAddress)
+
+// once enough signers have confirmed the tx and it got executed you should
+// run the MPECDH bootstrap ceremony
+
+// each signer instantiates a ceremony helper
+const choreo = await ceremony(mpecdhAddress, alice.provider)
+
+// run the bootstrap ceremony:
+// each signer needs to call `step0` initially
+// then each signer needs to call `stepN` for `signers.length - 2` rounds:
+// each signer must submit their current-round contribution before any other 
+// signer can proceed to submitting their next-round contribution
 for (const signer of signers) {
     await choreo.step0(signer)
 }
@@ -40,6 +58,11 @@ for (let i = 0; i < signers.length - 2; i++) {
         await choreo.stepN(signer)
     }
 }
+// encountering errors means that the previous round has not been completed, 
+// i.e. some signer still needs to submit their contribution for that round,
+// in such case call `await choreo.blocking()` to list all pending signers
+
+// finally each signer can independently derive the shared secret
 for (const signer of signers) {
     signer.sharedSecret = await choreo.stepX(signer)
 }

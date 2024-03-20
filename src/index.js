@@ -4,8 +4,9 @@ const { default: Safe, EthersAdapter } = require('@safe-global/protocol-kit')
 const { default: SafeApiKit } = require('@safe-global/api-kit')
 const { abi, bytecode, deployedBytecode } = require('./SafeMPECDH.json')
 
-const STATUS = { 0: "end", 1: "ok", 2: "idle" }
+const STATUS = { 0: 'end', 1: 'ok', 2: 'idle' }
 
+// https://github.com/safe-global/safe-smart-account/blob/main/CHANGELOG.md#lib-contracts
 const CREATE_CALL_LIB = '0x9b35Af71d77eaf8d7e40252370304687390A1A52'
 
 function encodeCtorArg(safeAddress) {
