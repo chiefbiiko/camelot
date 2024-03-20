@@ -3,7 +3,16 @@ const { ethers } = require('hardhat')
 const {
   loadFixture
 } = require('@nomicfoundation/hardhat-toolbox/network-helpers')
-const { kdf, scalarMult, ceremony, hex, buf } = require('../src')
+const {
+  kdf,
+  scalarMult,
+  ceremony,
+  hex,
+  buf,
+  calculateSafeMPECDHAddress,
+  assembleDeploySafeMPECDH,
+  proposeDeploySafeMPECDH
+} = require('../src')
 
 async function deploy(contractName, ...args) {
   return ethers.getContractFactory(contractName).then(f => f.deploy(...args))
@@ -293,5 +302,20 @@ describe('SafeMPECDH', function () {
     const expected = signers[0].sharedSecret
     expect(signers.every(s => s.sharedSecret !== trash)).to.be.true
     expect(signers.every(s => s.sharedSecret === expected)).to.be.true
+  })
+
+  it('should perform a determinsitic deployment using create2', async function () {
+    const { alice, safeMock3, provider } = await loadFixture(MPX25519Fixture)
+    const safeAddress = await safeMock3.getAddress()
+    const create2Caller = safeAddress // really Safe's CreateCall lib
+    // calc create2 adrs
+    const precalc = calculateSafeMPECDHAddress(safeAddress, create2Caller)
+    // assemble create2 deployment tx
+    const tx = assembleDeploySafeMPECDH(alice, safeAddress, create2Caller)
+    // broadcast depl tx
+    await alice.sendTransaction(tx).then(res => res.wait())
+    // assert precalculated adrs has code
+    const bytecode = await provider.getCode(precalc)
+    expect(bytecode.length).gt(0)
   })
 })
