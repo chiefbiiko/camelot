@@ -26,9 +26,17 @@ impl. There is a concrete [`SafeMPECDH`](./src/SafeMPECDH.sol) contract for use 
 3. Then each signer can derive the shared secret separately (`stepX`)
 
 ```js
-const { calcMPECDHAddress, proposeDeployMPECDH, ceremony } = require("./src/index")
+const { calcMPECDHAddress, hasMPECDH, isReady, proposeDeployMPECDH, ceremony } = require("./src/index")
 
 const safeAddress = "some safe address"
+let mpecdhAddress = await hasMPECDH(safeAddress)
+if (mpecdhAddress) {
+    console.log("Safe's MPECDH instance already deployed at " + mpecdhAddress)
+    console.log("Skip deployment and proceed with the ceremony if")
+    console.log("await isReady(safeAddress, provider) is false", await isReady(safeAddress))
+    console.log("if true each signer can derive the shared secret via choreo.stepX")
+}
+
 // in your dapp you will only have one ethers signer available but using 
 // three here to make the relation between number of rounds and signers clear
 const signers = [alice, bob, charlie] = await ethers.getSigners()

@@ -35,7 +35,13 @@ function calcMPECDHAddress(
 }
 
 async function hasMPECDH(safeAddress) {
-
+  const mpecdhAddress = calcMPECDHAddress(safeAddress)
+  const deployedBytecode = await provider.getCode(mpecdhAddress)
+  if (deployedBytecode.length > 2) {
+    return mpecdhAddress
+  } else {
+    return null
+  }
 }
 
 function createDeployMPECDH(
@@ -174,6 +180,23 @@ async function ceremony(mpecdhAddress, provider) {
   }
 }
 
+async function isReady(safeAddress, provider) {
+  const mpecdhAddress = calcMPECDHAddress(safeAddress)
+  provider =       typeof provider === 'string'
+  ? new ethers.JsonRpcProvider(provider)
+  : provider
+  const safe = new ethers.Contract(mpecdhAddress, [
+    'function getOwners() public returns (address[])'
+  ],{ provider  })
+  const signers = await safe.getOwners()
+  const mpecdh = new ethers.Contract(mpecdhAddress, [
+    'function queues(uint256 slot) public returns (bytes32[])'
+  ],{ provider  })
+  const queues = await Promise.all(signers.map((_s, i) => mpecdh.queues(i)))
+  // check if queue lengths are non-zero and all the same
+  return queues.length && queues[0].length > 0 && queues.every(q => q.length === queues[0].length)
+}
+
 module.exports = {
   hex,
   buf,
@@ -181,6 +204,8 @@ module.exports = {
   scalarMult,
   ceremony,
   calcMPECDHAddress,
+  hasMPECDH,
+  isReady,
   createDeployMPECDH,
   proposeDeployMPECDH
 }
