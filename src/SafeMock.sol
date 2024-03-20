@@ -19,4 +19,3 @@ contract SafeMock is SafeOwnerManager {
         SafeMPECDH(safeMPECDH).reconstruct();
     }
 }
- 
