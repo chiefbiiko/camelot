@@ -4,7 +4,7 @@ require('@nomicfoundation/hardhat-foundry')
 require('@nomicfoundation/hardhat-ethers')
 
 module.exports = {
-  solidity: '0.8.24',
+  solidity: '0.8.19',
   settings: {
     optimizer: {
       enabled: true,

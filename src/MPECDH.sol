@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.19;
 
 /// @dev MPECDH facilitates multi-party ECDH.
 abstract contract MPECDH {
@@ -10,16 +10,16 @@ abstract contract MPECDH {
         Idle
     }
 
-    /// @dev Master - usually a safe.
+    /// @dev Master - usually a Safe.
     address public immutable master;
-    /// @dev Copy of the safe's signers that serves as slot base.
+    /// @dev Copy of the Safe's signers that serves as slot base.
     address[] public signers;
     /// @dev Signers' key queues mapping from slot to intermediate keys.
     mapping(uint256 => bytes32[]) public queues;
     /// @dev Processed counter per signer.
     mapping(uint256 => uint256) public processed;
 
-    /// @dev Only allows the safe's current signer set.
+    /// @dev Only allows the Safe's current signer set.
     modifier onlySigners() {
         address[] memory _signers = _getSigners();
         bool _isSigner = false;
@@ -29,24 +29,27 @@ abstract contract MPECDH {
                 break;
             }
         }
-        require(_isSigner, "only safe signers");
+        require(_isSigner, "only signers");
         _;
     }
 
-    /// @dev Only allows the master - usually a safe.
+    /// @dev Only allows the master - usually a Safe.
     modifier onlyMaster() {
         require(msg.sender == master, "only master");
         _;
     }
 
-    /// @dev MPECDH ctor.
-    constructor() {
-        master = msg.sender;
+    /**
+     * @dev MPECDH ctor.
+     * @param _master Safe address
+     */
+    constructor(address _master) {
+        master = _master;
         signers = _getSigners();
     }
 
     /**
-     * @dev Resets the signer set to the safe's current one.
+     * @dev Resets the signer set to the Safe's current one.
      * Safes must call reconstruct() whenever their signer set has changed.
      */
     function reconstruct() external onlyMaster {
