@@ -10,8 +10,7 @@ const {
   hex,
   buf,
   calculateSafeMPECDHAddress,
-  assembleDeploySafeMPECDH,
-  proposeDeploySafeMPECDH
+  assembleDeploySafeMPECDH
 } = require('../src')
 
 async function deploy(contractName, ...args) {
@@ -35,6 +34,8 @@ describe('SafeMPECDH', function () {
     const safeMPECDH3 = SafeMPECDH.attach(await safeMock3.safeMPECDH())
     const safeMPECDH5 = SafeMPECDH.attach(await safeMock5.safeMPECDH())
 
+    const createCallLib = await deploy('CreateCall')
+
     const G = new Uint8Array(32)
     G[0] = 9
 
@@ -46,6 +47,7 @@ describe('SafeMPECDH', function () {
       eve,
       ferdie,
       provider: ethers.provider,
+      createCallLib,
       SafeMPECDH,
       safeMock3,
       safeMock5,
@@ -306,11 +308,18 @@ describe('SafeMPECDH', function () {
   })
 
   it('should perform a deterministic deployment using create2', async function () {
-    const { alice, bob, charlie, safeMock3, provider, SafeMPECDH } =
-      await loadFixture(MPX25519Fixture)
+    const {
+      alice,
+      bob,
+      charlie,
+      safeMock3,
+      provider,
+      createCallLib,
+      SafeMPECDH
+    } = await loadFixture(MPX25519Fixture)
 
     const safeAddress = await safeMock3.getAddress()
-    const create2Caller = safeAddress // in real world is Safe's CreateCall lib
+    const create2Caller = await createCallLib.getAddress()
 
     // calculate counterfactual create2 address
     const create2Address = calculateSafeMPECDHAddress(
