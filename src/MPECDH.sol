@@ -41,7 +41,7 @@ abstract contract MPECDH {
 
     /**
      * @dev MPECDH ctor.
-     * @param _master Safe address
+     * @param _master Master address - usually a Safe.
      */
     constructor(address _master) {
         master = _master;
@@ -49,8 +49,8 @@ abstract contract MPECDH {
     }
 
     /**
-     * @dev Resets the signer set to the Safe's current one.
-     * Safes must call reconstruct() whenever their signer set has changed.
+     * @dev Resets the signer set to the master's current one.
+     * reconstruct() must be called whenever a master's signer set has changed.
      */
     function reconstruct() external onlyMaster {
         for (uint256 _i = 0; _i < signers.length; _i++) {
@@ -141,7 +141,7 @@ abstract contract MPECDH {
     /**
      * @dev Lists all signers that have intermediary key contributions
      * pending for the current round.
-     * @return _signers Array of Safe signers
+     * @return _signers Array of signers
      */
     function blocking() public view returns (address[] memory _signers) {
         uint256 _maxQueueLen = 0;
@@ -167,8 +167,8 @@ abstract contract MPECDH {
     }
 
     /**
-     * @dev Gets the stored list of Safe signers.
-     * @return _signers Array of Safe signers
+     * @dev Gets the stored list of master's signers.
+     * @return _signers Array of signers
      */
     function getSigners() public view returns (address[] memory _signers) {
         return signers;
