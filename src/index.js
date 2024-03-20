@@ -32,12 +32,9 @@ function assembleDeploySafeMPECDH(
   const initBytecode = bytecode + encodeCtorArg(safeAddress)
   const salt = ethers.keccak256(safeAddress)
   // deterministic deployment via create2 using keccak256(safe) as salt
-  const data = new ethers.Contract(
-    _create2Caller,
-    [
-      'function performCreate2(uint256 value, bytes memory deploymentData, bytes32 salt) public returns (address newContract)'
-    ]
-  ).interface.encodeFunctionData('performCreate2', [0, initBytecode, salt])
+  const data = new ethers.Contract(_create2Caller, [
+    'function performCreate2(uint256 value, bytes memory deploymentData, bytes32 salt) public returns (address newContract)'
+  ]).interface.encodeFunctionData('performCreate2', [0, initBytecode, salt])
   const safeTxData = {
     to: _create2Caller,
     data,

@@ -46,6 +46,7 @@ describe('SafeMPECDH', function () {
       eve,
       ferdie,
       provider: ethers.provider,
+      SafeMPECDH,
       safeMock3,
       safeMock5,
       safeMPECDH3,
@@ -304,8 +305,8 @@ describe('SafeMPECDH', function () {
     expect(signers.every(s => s.sharedSecret === expected)).to.be.true
   })
 
-  it.only('should perform a deterministic deployment using create2', async function () {
-    const { alice, bob, charlie, safeMock3, provider } =
+  it('should perform a deterministic deployment using create2', async function () {
+    const { alice, bob, charlie, safeMock3, provider, SafeMPECDH } =
       await loadFixture(MPX25519Fixture)
 
     const safeAddress = await safeMock3.getAddress()
@@ -327,6 +328,7 @@ describe('SafeMPECDH', function () {
 
     deployedBytecode = await provider.getCode(create2Address)
     expect(deployedBytecode.length).gt(2)
+    expect(await SafeMPECDH.attach(create2Address).master()).eq(safeAddress)
 
     // monkey check there is a functional SafeMPECDH instance at create2Address
     const signers = [alice, bob, charlie]
