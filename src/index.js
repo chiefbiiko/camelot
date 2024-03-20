@@ -8,8 +8,8 @@ const CREATE_CALL_LIB = '0x9b35Af71d77eaf8d7e40252370304687390A1A52'
 
 function encodeCtorArg(safeAddress) {
   const ctorArg = Buffer.alloc(32)
-  ctorArg.set(Buffer.from(safeAddress.replace("0x", ""), "hex"), 12)
-  return ctorArg.toString("hex")
+  ctorArg.set(Buffer.from(safeAddress.replace('0x', ''), 'hex'), 12)
+  return ctorArg.toString('hex')
 }
 
 function calculateSafeMPECDHAddress(
@@ -26,7 +26,6 @@ function calculateSafeMPECDHAddress(
 }
 
 function assembleDeploySafeMPECDH(
-  signer,
   safeAddress,
   _create2Caller = CREATE_CALL_LIB
 ) {
@@ -37,15 +36,8 @@ function assembleDeploySafeMPECDH(
     _create2Caller,
     [
       'function performCreate2(uint256 value, bytes memory deploymentData, bytes32 salt) public returns (address newContract)'
-    ],
-    {
-      provider: signer.provider
-    }
-  ).interface.encodeFunctionData('performCreate2', [
-    0,
-    initBytecode,
-    salt
-  ])
+    ]
+  ).interface.encodeFunctionData('performCreate2', [0, initBytecode, salt])
   const safeTxData = {
     to: _create2Caller,
     data,
@@ -62,11 +54,7 @@ async function proposeDeploySafeMPECDH(
 ) {
   const ethAdapter = new EthersAdapter({ ethers, signerOrProvider: signer })
   const safeSigner = await Safe.create({ ethAdapter, safeAddress })
-  const safeTxData = assembleDeploySafeMPECDH(
-    signer,
-    safeAddress,
-    _create2Caller
-  )
+  const safeTxData = assembleDeploySafeMPECDH(safeAddress, _create2Caller)
   const safeTx = await safeSigner.createTransaction({
     transactions: [safeTxData]
   })
@@ -74,9 +62,9 @@ async function proposeDeploySafeMPECDH(
     .getNetwork()
     .then(({ chainId }) => chainId)
   const apiKit = new SafeApiKit({ chainId })
-  // Deterministic hash based on transaction parameters
+  // Deterministic hash based on tx params
   const safeTxHash = await safeSigner.getTransactionHash(safeTx)
-  // Sign transaction to verify that the transaction is coming from owner 1
+  // Sign Safe tx thereby adding first confirmation
   const senderSignature = await safeSigner.signHash(safeTxHash)
   await apiKit.proposeTransaction({
     safeAddress,

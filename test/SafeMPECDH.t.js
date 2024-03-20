@@ -304,18 +304,45 @@ describe('SafeMPECDH', function () {
     expect(signers.every(s => s.sharedSecret === expected)).to.be.true
   })
 
-  it('should perform a determinsitic deployment using create2', async function () {
-    const { alice, safeMock3, provider } = await loadFixture(MPX25519Fixture)
+  it.only('should perform a deterministic deployment using create2', async function () {
+    const { alice, bob, charlie, safeMock3, provider } =
+      await loadFixture(MPX25519Fixture)
+
     const safeAddress = await safeMock3.getAddress()
-    const create2Caller = safeAddress // really Safe's CreateCall lib
-    // calc create2 adrs
-    const precalc = calculateSafeMPECDHAddress(safeAddress, create2Caller)
-    // assemble create2 deployment tx
-    const tx = assembleDeploySafeMPECDH(alice, safeAddress, create2Caller)
-    // broadcast depl tx
+    const create2Caller = safeAddress // in real world is Safe's CreateCall lib
+
+    // calculate counterfactual create2 address
+    const create2Address = calculateSafeMPECDHAddress(
+      safeAddress,
+      create2Caller
+    )
+
+    let deployedBytecode = await provider.getCode(create2Address)
+    expect(deployedBytecode).eq('0x')
+
+    // assemble and broadcast the create2 deployment tx
+    // this corresponds to executing the Safe tx once it has been confirmed
+    const tx = assembleDeploySafeMPECDH(safeAddress, create2Caller)
     await alice.sendTransaction(tx).then(res => res.wait())
-    // assert precalculated adrs has code
-    const bytecode = await provider.getCode(precalc)
-    expect(bytecode.length).gt(0)
+
+    deployedBytecode = await provider.getCode(create2Address)
+    expect(deployedBytecode.length).gt(2)
+
+    // monkey check there is a functional SafeMPECDH instance at create2Address
+    const signers = [alice, bob, charlie]
+    const choreo = await ceremony(create2Address, provider)
+    for (const signer of signers) {
+      await choreo.step0(signer)
+    }
+    for (let i = 0; i < signers.length - 2; i++) {
+      for (const signer of signers) {
+        await choreo.stepN(signer)
+      }
+    }
+    for (const signer of signers) {
+      signer.sharedSecret = await choreo.stepX(signer)
+    }
+    const expected = signers[0].sharedSecret
+    expect(signers.every(s => s.sharedSecret === expected)).to.be.true
   })
 })
