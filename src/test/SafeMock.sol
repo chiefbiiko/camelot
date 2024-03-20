@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import { OwnerManager as SafeOwnerManager } from "safe-contracts/base/OwnerManager.sol";
-import { SafeMPECDH } from "./SafeMPECDH.sol";
+import { SafeMPECDH } from "../SafeMPECDH.sol";
 
 contract SafeMock is SafeOwnerManager {
     address public safeMPECDH;
