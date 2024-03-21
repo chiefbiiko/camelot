@@ -180,32 +180,33 @@ async function ceremony(mpecdhAddress, provider) {
   }
 }
 
-async function isReady(safeAddress, provider) {
-  const mpecdhAddress = calcMPECDHAddress(safeAddress)
-  provider =       typeof provider === 'string'
-  ? new ethers.JsonRpcProvider(provider)
-  : provider
-  const safe = new ethers.Contract(mpecdhAddress, [
-    'function getOwners() public returns (address[])'
-  ],{ provider  })
-  const signers = await safe.getOwners()
-  const mpecdh = new ethers.Contract(mpecdhAddress, [
-    'function queues(uint256 slot) public returns (bytes32[])'
-  ],{ provider  })
-  const queues = await Promise.all(signers.map((_s, i) => mpecdh.queues(i)))
+async function isReady(safeAddress, provider,   _create2Caller = CREATE_CALL_LIB) {
+  provider = typeof provider === 'string'  ? new ethers.JsonRpcProvider(provider) : provider
+  const mpecdhAddress = calcMPECDHAddress(safeAddress, _create2Caller)
+  const MPECDH = new ethers.ContractFactory(abi, deployedBytecode, { provider })
+  const mpecdh = MPECDH.attach(mpecdhAddress)
+  const signers = await mpecdh.getSigners()
+  const rounds = signers.length - 1
+  const queues = await Promise.all(signers.map((_, i) => mpecdh.getQueue(i)))
   // check if queue lengths are non-zero and all the same
-  return queues.length && queues[0].length > 0 && queues.every(q => q.length === queues[0].length)
+  return queues.length && queues.every(q => q.length === rounds)
 }
 
 module.exports = {
-  hex,
-  buf,
+  /// internals
   kdf,
   scalarMult,
+  /// utils
+  hex,
+  buf,
+  /// ceremony wrapper
   ceremony,
+  /// check funcs
   calcMPECDHAddress,
+  /// check funcs
   hasMPECDH,
   isReady,
+  // deployment funcs
   createDeployMPECDH,
   proposeDeployMPECDH
 }

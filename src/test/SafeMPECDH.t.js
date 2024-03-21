@@ -358,11 +358,11 @@ describe('SafeMPECDH', function () {
     expect(signers.every(s => s.sharedSecret === expected)).to.be.true
   })
 
-  it('should be ready', async function () {
+  it('should get all queues', async function () {
     const { alice, bob, charlie, safeMPECDH3, provider } =
       await loadFixture(MPX25519Fixture)
     const signers = [alice, bob, charlie]
-  
+
     const choreo = await ceremony(await safeMPECDH3.getAddress(), provider)
     for (const signer of signers) {
       await choreo.step0(signer)
@@ -379,7 +379,40 @@ describe('SafeMPECDH', function () {
     const expected = signers[0].sharedSecret
     expect(signers.every(s => s.sharedSecret === expected)).to.be.true
   
-    const allDone = await isReady(await safeMPECDH3.master(), provider)
+    for (let i = 0; i < signers.length; i++) {
+      const q = await safeMPECDH3.getQueue(i)
+      expect(q.length).eq(2)
+    }
+  })
+
+  it('should be ready', async function () {
+    const { alice, bob, charlie, safeMock3, createCallLib, provider } =
+      await loadFixture(MPX25519Fixture)
+    const signers = [alice, bob, charlie]
+
+    const safeAddress = await safeMock3.getAddress()
+    const create2Caller = await createCallLib.getAddress()
+    const create2Address = calcMPECDHAddress(safeAddress, create2Caller)
+    const tx = createDeployMPECDH(safeAddress, create2Caller)
+    await alice.sendTransaction(tx).then(res => res.wait())
+
+    const choreo = await ceremony(create2Address, provider)
+    for (const signer of signers) {
+      await choreo.step0(signer)
+    }
+    for (let i = 0; i < signers.length - 2; i++) {
+      for (const signer of signers) {
+        await choreo.stepN(signer)
+      }
+    }
+    for (const signer of signers) {
+      signer.sharedSecret = await choreo.stepX(signer)
+    }
+  
+    const expected = signers[0].sharedSecret
+    expect(signers.every(s => s.sharedSecret === expected)).to.be.true
+
+    const allDone = await isReady(safeAddress, provider, create2Caller)
     expect(allDone).to.be.true
   })
 })
