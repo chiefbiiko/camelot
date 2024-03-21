@@ -6,7 +6,7 @@ const {
 const {
   kdf,
   scalarMult,
-  ceremony,
+  mpecdh,
   hex,
   buf,
   calcMPECDHAddress,
@@ -155,7 +155,7 @@ describe('SafeMPECDH', function () {
 
     const signers = [alice, bob, charlie]
 
-    const choreo = await ceremony(await safeMPECDH3.getAddress(), provider)
+    const choreo = await mpecdh(await safeMPECDH3.getAddress(), provider)
     for (const signer of signers) {
       await choreo.step0(signer)
     }
@@ -178,7 +178,7 @@ describe('SafeMPECDH', function () {
 
     const signers = [alice, bob, charlie]
 
-    const choreo = await ceremony(await safeMPECDH3.getAddress(), provider)
+    const choreo = await mpecdh(await safeMPECDH3.getAddress(), provider)
     // at every fresh round start blocking() is empty
     // once the first intermediate key within a round has been posted
     // blocking() reports remaining round contributors
@@ -223,7 +223,7 @@ describe('SafeMPECDH', function () {
 
     const signers = [alice, bob, charlie, dave, eve]
 
-    const choreo = await ceremony(await safeMPECDH5.getAddress(), provider)
+    const choreo = await mpecdh(await safeMPECDH5.getAddress(), provider)
     for (const signer of signers) {
       await choreo.step0(signer)
     }
@@ -246,7 +246,7 @@ describe('SafeMPECDH', function () {
 
     const signers = [alice, bob, charlie, dave, eve]
 
-    const choreo = await ceremony(await safeMPECDH5.getAddress(), provider)
+    const choreo = await mpecdh(await safeMPECDH5.getAddress(), provider)
     for (let i = signers.length - 1; i > -1; i--) {
       // reverse vs order
       await choreo.step0(signers[i])
@@ -272,7 +272,7 @@ describe('SafeMPECDH', function () {
     const signers = [alice, bob, charlie]
     const mpecdhAddress = await safeMPECDH3.getAddress()
 
-    const choreo = await ceremony(mpecdhAddress, provider)
+    const choreo = await mpecdh(mpecdhAddress, provider)
     for (const signer of signers) {
       await choreo.step0(signer)
     }
@@ -345,7 +345,7 @@ describe('SafeMPECDH', function () {
 
     // monkey check there is a functional SafeMPECDH instance at create2Address
     const signers = [alice, bob, charlie]
-    const choreo = await ceremony(create2Address, provider)
+    const choreo = await mpecdh(create2Address, provider)
     for (const signer of signers) {
       await choreo.step0(signer)
     }
@@ -367,7 +367,7 @@ describe('SafeMPECDH', function () {
 
     const signers = [alice, bob, charlie]
 
-    const choreo = await ceremony(await safeMPECDH3.getAddress(), provider)
+    const choreo = await mpecdh(await safeMPECDH3.getAddress(), provider)
     for (const signer of signers) {
       await choreo.step0(signer)
     }
@@ -398,7 +398,11 @@ describe('SafeMPECDH', function () {
     const create2Caller = await createCallLib.getAddress()
     const create2Address = calcMPECDHAddress(safeAddress, create2Caller)
 
-    let isDeployed = await isMPECDHDeployed(safeAddress, provider, create2Caller)
+    let isDeployed = await isMPECDHDeployed(
+      safeAddress,
+      provider,
+      create2Caller
+    )
     expect(isDeployed).to.be.null
     let isReady = await isMPECDHReady(safeAddress, provider, create2Caller)
     expect(isReady).to.be.false
@@ -406,7 +410,7 @@ describe('SafeMPECDH', function () {
     const tx = buildMPECDHDeployment(safeAddress, create2Caller)
     await alice.sendTransaction(tx).then(res => res.wait())
 
-    const choreo = await ceremony(create2Address, provider)
+    const choreo = await mpecdh(create2Address, provider)
     for (const signer of signers) {
       await choreo.step0(signer)
     }

@@ -26,26 +26,25 @@ impl. There is a concrete [`SafeMPECDH`](./src/SafeMPECDH.sol) contract for use 
 3. Then each signer can derive the shared secret separately (`stepX`)
 
 ```js
-const { calcMPECDHAddress, isMPECDHDeployed, isMPECDHReady, proposeMPECDHDeployment, ceremony } = require("./src/index")
-
-const safeAddress = "some safe address"
-let mpecdhAddress = await isMPECDHDeployed(safeAddress)
-const isReady = await isMPECDHReady(safeAddress, provider)
-if (mpecdhAddress && !isReady) {
-// Safe's MPECDH instance already deployed at mpecdhAddress
-// skip deployment and proceed with the mpecdh(mpecdhAddress, provider) ceremony
-} else if (mpecdhAddress && isReady) {
-// Safe's MPECDH instance already deployed and set up at mpecdhAddress
-// skip deployment and the mpecdh(mpecdhAddress, provider) ceremony
-// each signer can derive the shared secret via choreo.stepX
-}
+const { calcMPECDHAddress, isMPECDHDeployed, isMPECDHReady, proposeMPECDHDeployment, mpecdh } = require("./src/index")
 
 // in your dapp you will only have one ethers signer available but using 
 // three here to make the relation between number of rounds and signers clear
 const signers = [alice, bob, charlie] = await ethers.getSigners()
 
+const safeAddress = "some safe address"
 // we use create2 thru Safe's CreateCall lib for deterministic addresses
-mpecdhAddress = calcMPECDHAddress(safeAddress)
+const mpecdhAddress = calcMPECDHAddress(safeAddress)
+const isDeployed = await isMPECDHDeployed(safeAddress)
+const isReady = await isMPECDHReady(safeAddress, provider)
+if (isDeployed && !isReady) {
+// Safe's MPECDH instance already deployed at mpecdhAddress
+// skip deployment and proceed with the mpecdh(mpecdhAddress, provider) ceremony
+} else if (isDeployed && isReady) {
+// Safe's MPECDH instance already deployed and set up at mpecdhAddress
+// skip deployment and the mpecdh(mpecdhAddress, provider) ceremony
+// each signer can derive the shared secret via choreo.stepX
+}
 
 // propose deployment of a SafeMPECDH instance at mpecdhAddress
 await proposeMPECDHDeployment(signer, safeAddress)
@@ -54,7 +53,7 @@ await proposeMPECDHDeployment(signer, safeAddress)
 // run the MPECDH bootstrap ceremony...
 
 // each signer instantiates a ceremony helper
-const choreo = await ceremony(mpecdhAddress, alice.provider)
+const choreo = await mpecdh(mpecdhAddress, alice.provider)
 
 // run the bootstrap ceremony:
 // each signer needs to call `step0` initially

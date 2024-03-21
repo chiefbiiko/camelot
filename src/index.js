@@ -31,7 +31,7 @@ function calcMPECDHAddress(safeAddress, _create2Caller = CREATE_CALL_LIB) {
   )
 }
 
-async function isMPECDHDeployed(safeAddress, provider , _create2Caller) {
+async function isMPECDHDeployed(safeAddress, provider, _create2Caller) {
   const mpecdhAddress = calcMPECDHAddress(safeAddress, _create2Caller)
   const deployedBytecode = await provider.getCode(mpecdhAddress)
   if (deployedBytecode.length > 2) {
@@ -159,7 +159,7 @@ function scalarMult(a, b) {
   return Buffer.from(x25519.scalarMult(a, b))
 }
 
-async function ceremony(mpecdhAddress, provider) {
+async function mpecdh(mpecdhAddress, provider) {
   const MPECDH = new ethers.ContractFactory(abi, deployedBytecode, {
     provider:
       typeof provider === 'string'
@@ -207,7 +207,7 @@ module.exports = {
   hex,
   buf,
   /// ceremony wrapper
-  ceremony,
+  mpecdh,
   /// create2 calculator
   calcMPECDHAddress,
   /// check funcs
