@@ -19,22 +19,25 @@ impl. There is a concrete [`SafeMPECDH`](./src/SafeMPECDH.sol) contract for use 
 
 ## Usage
 
-1. Deploy a `SafeMPECDH` instance via Safe (`proposeDeployMPECDH`)
+1. Deploy a `SafeMPECDH` instance via Safe (`proposeMPECDHDeployment`)
 
 2. Run the bootstrap ceremony with all signers (`step0` & `stepN`)
 
 3. Then each signer can derive the shared secret separately (`stepX`)
 
 ```js
-const { calcMPECDHAddress, hasMPECDH, isReady, proposeDeployMPECDH, ceremony } = require("./src/index")
+const { calcMPECDHAddress, isMPECDHDeployed, isMPECDHReady, proposeMPECDHDeployment, ceremony } = require("./src/index")
 
 const safeAddress = "some safe address"
-let mpecdhAddress = await hasMPECDH(safeAddress)
-if (mpecdhAddress) {
-    console.log("Safe's MPECDH instance already deployed at " + mpecdhAddress)
-    console.log("Skip deployment and proceed with the ceremony if")
-    console.log("await isReady(safeAddress, provider) is false", await isReady(safeAddress))
-    console.log("if true each signer can derive the shared secret via choreo.stepX")
+let mpecdhAddress = await isMPECDHDeployed(safeAddress)
+const isReady = await isMPECDHReady(safeAddress, provider)
+if (mpecdhAddress && !isReady) {
+// Safe's MPECDH instance already deployed at mpecdhAddress
+// skip deployment and proceed with the mpecdh(mpecdhAddress, provider) ceremony
+} else if (mpecdhAddress && isReady) {
+// Safe's MPECDH instance already deployed and set up at mpecdhAddress
+// skip deployment and the mpecdh(mpecdhAddress, provider) ceremony
+// each signer can derive the shared secret via choreo.stepX
 }
 
 // in your dapp you will only have one ethers signer available but using 
@@ -42,13 +45,13 @@ if (mpecdhAddress) {
 const signers = [alice, bob, charlie] = await ethers.getSigners()
 
 // we use create2 thru Safe's CreateCall lib for deterministic addresses
-const mpecdhAddress = calcMPECDHAddress(safeAddress)
+mpecdhAddress = calcMPECDHAddress(safeAddress)
 
 // propose deployment of a SafeMPECDH instance at mpecdhAddress
-await proposeDeployMPECDH(signer, safeAddress)
+await proposeMPECDHDeployment(signer, safeAddress)
 
-// once enough signers have confirmed the tx and it got executed you should
-// run the MPECDH bootstrap ceremony
+// ...once enough signers have confirmed the tx and it got executed you should
+// run the MPECDH bootstrap ceremony...
 
 // each signer instantiates a ceremony helper
 const choreo = await ceremony(mpecdhAddress, alice.provider)

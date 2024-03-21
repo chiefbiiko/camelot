@@ -10,8 +10,9 @@ const {
   hex,
   buf,
   calcMPECDHAddress,
-  createDeployMPECDH,
-  isReady,
+  buildMPECDHDeployment,
+  isMPECDHReady,
+  isMPECDHDeployed
 } = require('..')
 
 async function deploy(contractName, ...args) {
@@ -151,6 +152,7 @@ describe('SafeMPECDH', function () {
   it('should yield a shared secret after a threesome ceremony', async function () {
     const { alice, bob, charlie, safeMPECDH3, provider } =
       await loadFixture(MPX25519Fixture)
+
     const signers = [alice, bob, charlie]
 
     const choreo = await ceremony(await safeMPECDH3.getAddress(), provider)
@@ -173,6 +175,7 @@ describe('SafeMPECDH', function () {
   it('should report blocking round contributors during ceremony', async function () {
     const { alice, bob, charlie, safeMPECDH3, provider } =
       await loadFixture(MPX25519Fixture)
+
     const signers = [alice, bob, charlie]
 
     const choreo = await ceremony(await safeMPECDH3.getAddress(), provider)
@@ -217,6 +220,7 @@ describe('SafeMPECDH', function () {
   it('should yield a shared secret after a fivesome ceremony', async function () {
     const { alice, bob, charlie, dave, eve, safeMPECDH5, provider } =
       await loadFixture(MPX25519Fixture)
+
     const signers = [alice, bob, charlie, dave, eve]
 
     const choreo = await ceremony(await safeMPECDH5.getAddress(), provider)
@@ -239,6 +243,7 @@ describe('SafeMPECDH', function () {
   it('should yield a shared secret after unorderered intra-round submissions', async function () {
     const { alice, bob, charlie, dave, eve, safeMPECDH5, provider } =
       await loadFixture(MPX25519Fixture)
+
     const signers = [alice, bob, charlie, dave, eve]
 
     const choreo = await ceremony(await safeMPECDH5.getAddress(), provider)
@@ -263,6 +268,7 @@ describe('SafeMPECDH', function () {
   it('should allow reconstruction', async function () {
     const { alice, bob, charlie, safeMPECDH3, safeMock3, provider } =
       await loadFixture(MPX25519Fixture)
+
     const signers = [alice, bob, charlie]
     const mpecdhAddress = await safeMPECDH3.getAddress()
 
@@ -323,17 +329,14 @@ describe('SafeMPECDH', function () {
     const create2Caller = await createCallLib.getAddress()
 
     // calculate counterfactual create2 address
-    const create2Address = calcMPECDHAddress(
-      safeAddress,
-      create2Caller
-    )
+    const create2Address = calcMPECDHAddress(safeAddress, create2Caller)
 
     let deployedBytecode = await provider.getCode(create2Address)
     expect(deployedBytecode).eq('0x')
 
     // assemble and broadcast the create2 deployment tx
     // this corresponds to executing the Safe tx once it has been confirmed
-    const tx = createDeployMPECDH(safeAddress, create2Caller)
+    const tx = buildMPECDHDeployment(safeAddress, create2Caller)
     await alice.sendTransaction(tx).then(res => res.wait())
 
     deployedBytecode = await provider.getCode(create2Address)
@@ -361,6 +364,7 @@ describe('SafeMPECDH', function () {
   it('should get all queues', async function () {
     const { alice, bob, charlie, safeMPECDH3, provider } =
       await loadFixture(MPX25519Fixture)
+
     const signers = [alice, bob, charlie]
 
     const choreo = await ceremony(await safeMPECDH3.getAddress(), provider)
@@ -375,10 +379,10 @@ describe('SafeMPECDH', function () {
     for (const signer of signers) {
       signer.sharedSecret = await choreo.stepX(signer)
     }
-  
+
     const expected = signers[0].sharedSecret
     expect(signers.every(s => s.sharedSecret === expected)).to.be.true
-  
+
     for (let i = 0; i < signers.length; i++) {
       const q = await safeMPECDH3.getQueue(i)
       expect(q.length).eq(2)
@@ -388,12 +392,18 @@ describe('SafeMPECDH', function () {
   it('should be ready', async function () {
     const { alice, bob, charlie, safeMock3, createCallLib, provider } =
       await loadFixture(MPX25519Fixture)
-    const signers = [alice, bob, charlie]
 
+    const signers = [alice, bob, charlie]
     const safeAddress = await safeMock3.getAddress()
     const create2Caller = await createCallLib.getAddress()
     const create2Address = calcMPECDHAddress(safeAddress, create2Caller)
-    const tx = createDeployMPECDH(safeAddress, create2Caller)
+
+    let isDeployed = await isMPECDHDeployed(safeAddress, provider, create2Caller)
+    expect(isDeployed).to.be.null
+    let isReady = await isMPECDHReady(safeAddress, provider, create2Caller)
+    expect(isReady).to.be.false
+
+    const tx = buildMPECDHDeployment(safeAddress, create2Caller)
     await alice.sendTransaction(tx).then(res => res.wait())
 
     const choreo = await ceremony(create2Address, provider)
@@ -408,11 +418,13 @@ describe('SafeMPECDH', function () {
     for (const signer of signers) {
       signer.sharedSecret = await choreo.stepX(signer)
     }
-  
+
     const expected = signers[0].sharedSecret
     expect(signers.every(s => s.sharedSecret === expected)).to.be.true
 
-    const allDone = await isReady(safeAddress, provider, create2Caller)
-    expect(allDone).to.be.true
+    isDeployed = await isMPECDHDeployed(safeAddress, provider, create2Caller)
+    expect(isDeployed).eq(create2Address)
+    isReady = await isMPECDHReady(safeAddress, provider, create2Caller)
+    expect(isReady).to.be.true
   })
 })
