@@ -21,10 +21,7 @@ function calculateSalt(safeAddress) {
   return ethers.keccak256(safeAddress + '00')
 }
 
-function calcMPECDHAddress(
-  safeAddress,
-  _create2Caller = CREATE_CALL_LIB
-) {
+function calcMPECDHAddress(safeAddress, _create2Caller = CREATE_CALL_LIB) {
   const bytecode = initBytecode(safeAddress)
   const salt = calculateSalt(safeAddress)
   return ethers.getCreate2Address(
@@ -34,8 +31,8 @@ function calcMPECDHAddress(
   )
 }
 
-async function hasMPECDH(safeAddress) {
-  const mpecdhAddress = calcMPECDHAddress(safeAddress)
+async function isMPECDHDeployed(safeAddress, provider , _create2Caller) {
+  const mpecdhAddress = calcMPECDHAddress(safeAddress, _create2Caller)
   const deployedBytecode = await provider.getCode(mpecdhAddress)
   if (deployedBytecode.length > 2) {
     return mpecdhAddress
@@ -44,10 +41,32 @@ async function hasMPECDH(safeAddress) {
   }
 }
 
-function createDeployMPECDH(
+async function isMPECDHReady(
   safeAddress,
+  provider,
   _create2Caller = CREATE_CALL_LIB
 ) {
+  provider =
+    typeof provider === 'string'
+      ? new ethers.JsonRpcProvider(provider)
+      : provider
+  const mpecdhAddress = calcMPECDHAddress(safeAddress, _create2Caller)
+  const MPECDH = new ethers.ContractFactory(abi, deployedBytecode, { provider })
+  const mpecdh = MPECDH.attach(mpecdhAddress)
+  let signers
+  // if getSigners() fails MPECDH is not deployed
+  try {
+    signers = await mpecdh.getSigners()
+  } catch (_) {
+    return false
+  }
+  const rounds = signers.length - 1
+  const queues = await Promise.all(signers.map((_, i) => mpecdh.getQueue(i)))
+  // check if queue lengths are non-zero and all the same
+  return queues.length && queues.every(q => q.length === rounds)
+}
+
+function buildMPECDHDeployment(safeAddress, _create2Caller = CREATE_CALL_LIB) {
   const bytecode = initBytecode(safeAddress)
   const salt = calculateSalt(safeAddress)
   // deterministic deployment via create2 using keccak256(safe) as salt
@@ -63,14 +82,14 @@ function createDeployMPECDH(
   return safeTxData
 }
 
-async function proposeDeployMPECDH(
+async function proposeMPECDHDeployment(
   signer,
   safeAddress,
   _create2Caller = CREATE_CALL_LIB
 ) {
   const ethAdapter = new EthersAdapter({ ethers, signerOrProvider: signer })
   const safeSigner = await Safe.create({ ethAdapter, safeAddress })
-  const safeTxData = createDeployMPECDH(safeAddress, _create2Caller)
+  const safeTxData = buildMPECDHDeployment(safeAddress, _create2Caller)
   const safeTx = await safeSigner.createTransaction({
     transactions: [safeTxData]
   })
@@ -180,18 +199,6 @@ async function ceremony(mpecdhAddress, provider) {
   }
 }
 
-async function isReady(safeAddress, provider,   _create2Caller = CREATE_CALL_LIB) {
-  provider = typeof provider === 'string'  ? new ethers.JsonRpcProvider(provider) : provider
-  const mpecdhAddress = calcMPECDHAddress(safeAddress, _create2Caller)
-  const MPECDH = new ethers.ContractFactory(abi, deployedBytecode, { provider })
-  const mpecdh = MPECDH.attach(mpecdhAddress)
-  const signers = await mpecdh.getSigners()
-  const rounds = signers.length - 1
-  const queues = await Promise.all(signers.map((_, i) => mpecdh.getQueue(i)))
-  // check if queue lengths are non-zero and all the same
-  return queues.length && queues.every(q => q.length === rounds)
-}
-
 module.exports = {
   /// internals
   kdf,
@@ -201,12 +208,12 @@ module.exports = {
   buf,
   /// ceremony wrapper
   ceremony,
-  /// check funcs
+  /// create2 calculator
   calcMPECDHAddress,
   /// check funcs
-  hasMPECDH,
-  isReady,
+  isMPECDHDeployed,
+  isMPECDHReady,
   // deployment funcs
-  createDeployMPECDH,
-  proposeDeployMPECDH
+  buildMPECDHDeployment,
+  proposeMPECDHDeployment
 }
