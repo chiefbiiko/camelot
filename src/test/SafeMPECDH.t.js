@@ -20,7 +20,7 @@ async function deploy(contractName, ...args) {
 }
 
 describe('SafeMPECDH', function () {
-  async function MPX25519Fixture() {
+  async function MPECDHFixture() {
     const [alice, bob, charlie, dave, eve, ferdie] = await ethers.getSigners()
     const safeMock3 = await deploy('SafeMock', [alice, bob, charlie], 2)
     const safeMock5 = await deploy(
@@ -60,7 +60,7 @@ describe('SafeMPECDH', function () {
   }
 
   it('should have deployed SafeMPECDH through Safe', async function () {
-    const { safeMPECDH3, safeMPECDH5 } = await loadFixture(MPX25519Fixture)
+    const { safeMPECDH3, safeMPECDH5 } = await loadFixture(MPECDHFixture)
 
     const safeMPECDH3Code = await ethers.provider
       .getCode(await safeMPECDH3.getAddress())
@@ -77,7 +77,7 @@ describe('SafeMPECDH', function () {
   })
 
   it('pk inspection', async function () {
-    const { alice, G } = await loadFixture(MPX25519Fixture)
+    const { alice, G } = await loadFixture(MPECDHFixture)
 
     const a = await kdf(alice)
     const aG = scalarMult(a.secretKey, G)
@@ -86,7 +86,7 @@ describe('SafeMPECDH', function () {
   })
 
   it('poc', async function () {
-    const { alice, bob, charlie } = await loadFixture(MPX25519Fixture)
+    const { alice, bob, charlie } = await loadFixture(MPECDHFixture)
 
     const a = await kdf(alice)
     const b = await kdf(bob)
@@ -110,7 +110,7 @@ describe('SafeMPECDH', function () {
 
   it('poc via contract', async function () {
     const { alice, bob, charlie, safeMPECDH3 } =
-      await loadFixture(MPX25519Fixture)
+      await loadFixture(MPECDHFixture)
 
     const a = await kdf(alice)
     const b = await kdf(bob)
@@ -151,7 +151,7 @@ describe('SafeMPECDH', function () {
 
   it('should yield a shared secret after a threesome ceremony', async function () {
     const { alice, bob, charlie, safeMPECDH3, provider } =
-      await loadFixture(MPX25519Fixture)
+      await loadFixture(MPECDHFixture)
 
     const signers = [alice, bob, charlie]
 
@@ -174,7 +174,7 @@ describe('SafeMPECDH', function () {
 
   it('should report blocking round contributors during ceremony', async function () {
     const { alice, bob, charlie, safeMPECDH3, provider } =
-      await loadFixture(MPX25519Fixture)
+      await loadFixture(MPECDHFixture)
 
     const signers = [alice, bob, charlie]
 
@@ -219,7 +219,7 @@ describe('SafeMPECDH', function () {
 
   it('should yield a shared secret after a fivesome ceremony', async function () {
     const { alice, bob, charlie, dave, eve, safeMPECDH5, provider } =
-      await loadFixture(MPX25519Fixture)
+      await loadFixture(MPECDHFixture)
 
     const signers = [alice, bob, charlie, dave, eve]
 
@@ -242,7 +242,7 @@ describe('SafeMPECDH', function () {
 
   it('should yield a shared secret after unorderered intra-round submissions', async function () {
     const { alice, bob, charlie, dave, eve, safeMPECDH5, provider } =
-      await loadFixture(MPX25519Fixture)
+      await loadFixture(MPECDHFixture)
 
     const signers = [alice, bob, charlie, dave, eve]
 
@@ -267,7 +267,7 @@ describe('SafeMPECDH', function () {
 
   it('should allow reconstruction', async function () {
     const { alice, bob, charlie, safeMPECDH3, safeMock3, provider } =
-      await loadFixture(MPX25519Fixture)
+      await loadFixture(MPECDHFixture)
 
     const signers = [alice, bob, charlie]
     const mpecdhAddress = await safeMPECDH3.getAddress()
@@ -323,7 +323,7 @@ describe('SafeMPECDH', function () {
       provider,
       createCallLib,
       SafeMPECDH
-    } = await loadFixture(MPX25519Fixture)
+    } = await loadFixture(MPECDHFixture)
 
     const safeAddress = await safeMock3.getAddress()
     const create2Caller = await createCallLib.getAddress()
@@ -363,7 +363,7 @@ describe('SafeMPECDH', function () {
 
   it('should get all queues', async function () {
     const { alice, bob, charlie, safeMPECDH3, provider } =
-      await loadFixture(MPX25519Fixture)
+      await loadFixture(MPECDHFixture)
 
     const signers = [alice, bob, charlie]
 
@@ -391,7 +391,7 @@ describe('SafeMPECDH', function () {
 
   it('should be ready', async function () {
     const { alice, bob, charlie, safeMock3, createCallLib, provider } =
-      await loadFixture(MPX25519Fixture)
+      await loadFixture(MPECDHFixture)
 
     const signers = [alice, bob, charlie]
     const safeAddress = await safeMock3.getAddress()
