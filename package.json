@@ -33,6 +33,10 @@
     "@noble/curves": "^1.4.0",
     "@safe-global/api-kit": "^2.2.0",
     "@safe-global/protocol-kit": "^3.0.1",
-    "ethers": "^6.9.0"
+    "ethers": "^6.9.0",
+    "http": "npm:stream-http@3.2.0",
+    "https": "npm:https-browserify@1.0.0",
+    "stream": "npm:stream-browserify@3.0.0",
+    "zlib": "npm:browserify-zlib@0.2.0"
   }
 }
