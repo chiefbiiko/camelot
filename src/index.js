@@ -1,7 +1,8 @@
 const ethers = require('ethers')
 const { x25519, hashToCurve } = require('@noble/curves/ed25519')
-const { default: Safe, EthersAdapter } = require('@safe-global/protocol-kit')
+const { default: Safe, Web3Adapter } = require('@safe-global/protocol-kit')
 const { default: SafeApiKit } = require('@safe-global/api-kit')
+const { default: Web3 } = require('web3')
 const { abi, bytecode, deployedBytecode } = require('./SafeMPECDH.json')
 
 const STATUS = { 0: 'end', 1: 'ok', 2: 'idle' }
@@ -87,7 +88,10 @@ async function proposeMPECDHDeployment(
   safeAddress,
   _create2Caller = CREATE_CALL_LIB
 ) {
-  const ethAdapter = new EthersAdapter({ ethers, signerOrProvider: signer })
+  const ethAdapter = new Web3Adapter({
+    web3: new Web3(window.ethereum),
+    signerAddress: signer.address
+  })
   const safeSigner = await Safe.create({ ethAdapter, safeAddress })
   const safeTxData = buildMPECDHDeployment(safeAddress, _create2Caller)
   const safeTx = await safeSigner.createTransaction({
