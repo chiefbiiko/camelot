@@ -37,6 +37,10 @@ function calcMPECDHAddress(safeAddress, _create2Caller = CREATE_CALL_LIB) {
 }
 
 async function isMPECDHDeployed(safeAddress, provider, _create2Caller) {
+  provider =
+    typeof provider === 'string'
+      ? new ethers.JsonRpcProvider(provider)
+      : provider
   const mpecdhAddress = calcMPECDHAddress(safeAddress, _create2Caller)
   const deployedBytecode = await provider.getCode(mpecdhAddress)
   if (deployedBytecode.length > 2) {
@@ -172,30 +176,30 @@ async function mpecdh(mpecdhAddress, provider) {
         ? new ethers.JsonRpcProvider(provider)
         : provider
   })
-  const mpecdh = MPECDH.attach(mpecdhAddress)
+  const _mpecdh = MPECDH.attach(mpecdhAddress)
   return {
     async blocking() {
-      return mpecdh.blocking()
+      return _mpecdh.blocking()
     },
     async status(signer) {
-      const [status] = await mpecdh.prep(signer.address)
+      const [status] = await _mpecdh.prep(signer.address)
       return Number(status)
     },
     async step0(signer) {
       const kp = await kdf(signer)
-      await mpecdh.connect(signer).step(kp.publicKey)
+      await _mpecdh.connect(signer).step(kp.publicKey)
     },
     async stepN(signer) {
-      const [status, preKey] = await mpecdh.prep(signer.address)
+      const [status, preKey] = await _mpecdh.prep(signer.address)
       if (status !== 1n) {
         throw Error(`expected status ${STATUS[1]} got ${STATUS[status]}`)
       }
       const kp = await kdf(signer)
       const newKey = scalarMult(kp.secretKey, preKey)
-      await mpecdh.connect(signer).step(newKey)
+      await _mpecdh.connect(signer).step(newKey)
     },
     async stepX(signer) {
-      const [status, preKey] = await mpecdh.prep(signer.address)
+      const [status, preKey] = await _mpecdh.prep(signer.address)
       if (status !== 0n) {
         throw Error(`expected status ${STATUS[0]} got ${STATUS[status]}`)
       }
