@@ -98,8 +98,8 @@ async function proposeMPECDHDeployment(
 ) {
   const _safeAddress = ethers.getAddress(safeAddress)
   const ethAdapter = new EthersAdapter({ ethers, signerOrProvider: signer })
-  const safeSigner = await Safe.create({ ethAdapter, safeAddress })
-  const safeTxData = buildMPECDHDeployment(safeAddress, _create2Caller)
+  const safeSigner = await Safe.create({ ethAdapter, safeAddress: _safeAddress })
+  const safeTxData = buildMPECDHDeployment(_safeAddress, _create2Caller)
   const safeTx = await safeSigner.createTransaction({
     transactions: [safeTxData]
   })
@@ -185,12 +185,6 @@ async function mpecdh(mpecdhAddress, provider) {
     async status(signer) {
       const [status] = await _mpecdh.prep(signer.address)
       return Number(status)
-    },
-    async contributed0(signer) {
-      const sourceSlot = await _mpecdh.source(signer.address)
-      const targetSlot = await _mpecdh.target(sourceSlot)
-      const targetQueue = await _mpecdh.getQueue(targetSlot)
-      return targetQueue.length > 0
     },
     async step0(signer) {
       const kp = await kdf(signer)
