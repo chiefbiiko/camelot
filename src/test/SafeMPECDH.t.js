@@ -7,6 +7,7 @@ const {
   kdf,
   scalarMult,
   mpecdh,
+  getOwners,
   hex,
   buf,
   calcMPECDHAddress,
@@ -58,6 +59,15 @@ describe('SafeMPECDH', function () {
       G
     }
   }
+
+  it('should get all safe owners', async function () {
+    const { safeMPECDH3, alice, bob, charlie } =
+      await loadFixture(MPECDHFixture)
+    const expected = [alice, bob, charlie].map(s => s.address)
+
+    const signers3 = await getOwners(await safeMPECDH3.master(), alice.provider)
+    expect(signers3).to.deep.equal(expected)
+  })
 
   it('should have deployed SafeMPECDH through Safe', async function () {
     const { safeMPECDH3, safeMPECDH5 } = await loadFixture(MPECDHFixture)

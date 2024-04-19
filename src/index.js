@@ -209,11 +209,20 @@ async function mpecdh(mpecdhAddress, provider) {
   }
 }
 
+async function getOwners(safeAddress, provider) {
+  return new ethers.Contract(
+    safeAddress,
+    ['function getOwners() public view returns (address[] memory)'],
+    { provider }
+  ).getOwners()
+}
+
 module.exports = {
   /// internals
   kdf,
   scalarMult,
   /// utils
+  getOwners,
   hex,
   buf,
   /// ceremony wrapper
