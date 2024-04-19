@@ -74,7 +74,17 @@ abstract contract MPECDH {
         uint256 _targetSlot = target(_sourceSlot);
         require(_targetSlot != type(uint256).max, "no such slot");
         if (queues[_targetSlot].length == signers.length - 1) {
-            return (Step.End, queues[_sourceSlot][processed[_sourceSlot] - 1]);
+            if (
+                queues[_sourceSlot].length < processed[_sourceSlot] ||
+                processed[_sourceSlot] == 0
+            ) {
+                return (Step.End, bytes32(0));
+            } else {
+                return (
+                    Step.End,
+                    queues[_sourceSlot][processed[_sourceSlot] - 1]
+                );
+            }
         } else if (queues[_targetSlot].length <= queues[_sourceSlot].length) {
             if (processed[_sourceSlot] == 0) {
                 // should be status wen nothing has been contributed by signer

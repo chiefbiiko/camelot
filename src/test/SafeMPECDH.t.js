@@ -159,25 +159,34 @@ describe('SafeMPECDH', function () {
     expect(bGca).to.equal(cGab)
   })
 
-  it('should check initial status enum', async function () {
+  it('should correctly report stati for all signers during ceremony', async function () {
     const { alice, bob, charlie, safeMPECDH3, provider } =
       await loadFixture(MPECDHFixture)
 
     const signers = [alice, bob, charlie]
 
     const choreo = await mpecdh(await safeMPECDH3.getAddress(), provider)
-    const status = await choreo.status(alice)
 
-    expect(status).to.equal(3)
     for (const signer of signers) {
+      let status = await choreo.status(signer)
+      expect(status).to.equal(3)
       await choreo.step0(signer)
+      status = await choreo.status(signer)
+      // in round robin 4 alice post step0 status is idle for the others ok
+      expect(status).to.equal(signer.address === alice.address ? 2 : 1)
     }
     for (let i = 0; i < signers.length - 2; i++) {
       for (const signer of signers) {
+        let status = await choreo.status(signer)
+        expect(status).to.equal(1)
         await choreo.stepN(signer)
+        status = await choreo.status(signer)
+        expect(status).to.equal(0)
       }
     }
     for (const signer of signers) {
+      let status = await choreo.status(signer)
+      expect(status).to.equal(0)
       signer.sharedSecret = await choreo.stepX(signer)
     }
 
