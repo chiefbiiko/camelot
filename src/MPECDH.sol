@@ -7,7 +7,8 @@ abstract contract MPECDH {
     enum Step {
         End,
         Ok,
-        Idle
+        Idle,
+        Null
     }
 
     /// @dev Master - usually a Safe.
@@ -75,7 +76,15 @@ abstract contract MPECDH {
         if (queues[_targetSlot].length == signers.length - 1) {
             return (Step.End, queues[_sourceSlot][processed[_sourceSlot] - 1]);
         } else if (queues[_targetSlot].length <= queues[_sourceSlot].length) {
-            return (Step.Ok, queues[_sourceSlot][processed[_sourceSlot] - 1]);
+            if (processed[_sourceSlot] == 0) {
+                // should be status wen nothing has been contributed by signer
+                return (Step.Null, bytes32(0));
+            } else {
+                return (
+                    Step.Ok,
+                    queues[_sourceSlot][processed[_sourceSlot] - 1]
+                );
+            }
         } else {
             return (Step.Idle, bytes32(0));
         }

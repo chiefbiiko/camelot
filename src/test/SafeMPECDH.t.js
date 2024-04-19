@@ -159,6 +159,32 @@ describe('SafeMPECDH', function () {
     expect(bGca).to.equal(cGab)
   })
 
+  it('should check initial status enum', async function () {
+    const { alice, bob, charlie, safeMPECDH3, provider } =
+      await loadFixture(MPECDHFixture)
+
+    const signers = [alice, bob, charlie]
+
+    const choreo = await mpecdh(await safeMPECDH3.getAddress(), provider)
+    const status = await choreo.status(alice)
+
+    expect(status).to.equal(3)
+    for (const signer of signers) {
+      await choreo.step0(signer)
+    }
+    for (let i = 0; i < signers.length - 2; i++) {
+      for (const signer of signers) {
+        await choreo.stepN(signer)
+      }
+    }
+    for (const signer of signers) {
+      signer.sharedSecret = await choreo.stepX(signer)
+    }
+
+    const expected = signers[0].sharedSecret
+    expect(signers.every(s => s.sharedSecret === expected)).to.be.true
+  })
+
   it('should yield a shared secret after a threesome ceremony', async function () {
     const { alice, bob, charlie, safeMPECDH3, provider } =
       await loadFixture(MPECDHFixture)

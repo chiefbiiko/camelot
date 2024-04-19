@@ -178,12 +178,19 @@ async function mpecdh(mpecdhAddress, provider) {
   })
   const _mpecdh = MPECDH.attach(mpecdhAddress)
   return {
+    contract: _mpecdh,
     async blocking() {
       return _mpecdh.blocking()
     },
     async status(signer) {
       const [status] = await _mpecdh.prep(signer.address)
       return Number(status)
+    },
+    async contributed0(signer) {
+      const sourceSlot = await _mpecdh.source(signer.address)
+      const targetSlot = await _mpecdh.target(sourceSlot)
+      const targetQueue = await _mpecdh.getQueue(targetSlot)
+      return targetQueue.length > 0
     },
     async step0(signer) {
       const kp = await kdf(signer)
