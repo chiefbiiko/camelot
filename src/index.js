@@ -3,10 +3,8 @@ const { x25519, hashToCurve } = require('@noble/curves/ed25519')
 const {
   default: Safe,
   EthersAdapter,
-  Web3Adapter
 } = require('@safe-global/protocol-kit')
 const { default: SafeApiKit } = require('@safe-global/api-kit')
-const { default: Web3 } = require('web3')
 const { abi, bytecode, deployedBytecode } = require('./SafeMPECDH.json')
 
 const STATUS = { 0: 'end', 1: 'ok', 2: 'idle' }
