@@ -123,7 +123,7 @@ async function proposeMPECDHDeployment(
   return {
     safeTxHash,
     safeAddress: _safeAddress,
-    mpecdhAddress: calcMPECDHAddress(safeAddress)
+    mpecdhAddress: calcMPECDHAddress(safeAddress, owners)
   }
 }
 
