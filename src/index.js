@@ -18,15 +18,16 @@ function initBytecode(safeAddress) {
   return bytecode + ctorArg.toString('hex')
 }
 
-function calculateSalt(safeAddress) {
+function calculateSalt(owners) {
+  const _owners = owners.map(adrs => adrs.replace("0x", "")).sort().join("")
   // NOTE trailing preimage byte is version - must be changed with every .sol
   // version so that create2 redeployments of a MPECDH instance are possible
-  return ethers.keccak256(safeAddress + '00')
+  return ethers.keccak256("0x" + _owners + '00')
 }
 
-function calcMPECDHAddress(safeAddress, _create2Caller = CREATE_CALL_LIB) {
+function calcMPECDHAddress(safeAddress, owners, _create2Caller = CREATE_CALL_LIB) {
   const bytecode = initBytecode(safeAddress)
-  const salt = calculateSalt(safeAddress)
+  const salt = calculateSalt(owners)
   return ethers.getCreate2Address(
     _create2Caller,
     salt,
@@ -39,7 +40,8 @@ async function isMPECDHDeployed(safeAddress, provider, _create2Caller) {
     typeof provider === 'string'
       ? new ethers.JsonRpcProvider(provider)
       : provider
-  const mpecdhAddress = calcMPECDHAddress(safeAddress, _create2Caller)
+  const owners = await getOwners(safeAddress, provider)
+  const mpecdhAddress = calcMPECDHAddress(safeAddress, owners, _create2Caller)
   const deployedBytecode = await provider.getCode(mpecdhAddress)
   if (deployedBytecode.length > 2) {
     return mpecdhAddress
@@ -57,7 +59,8 @@ async function isMPECDHReady(
     typeof provider === 'string'
       ? new ethers.JsonRpcProvider(provider)
       : provider
-  const mpecdhAddress = calcMPECDHAddress(safeAddress, _create2Caller)
+  const owners = await getOwners(safeAddress, provider)
+  const mpecdhAddress = calcMPECDHAddress(safeAddress, owners, _create2Caller)
   const MPECDH = new ethers.ContractFactory(abi, deployedBytecode, { provider })
   const mpecdh = MPECDH.attach(mpecdhAddress)
   let signers
@@ -73,9 +76,9 @@ async function isMPECDHReady(
   return queues.length && queues.every(q => q.length === rounds)
 }
 
-function buildMPECDHDeployment(safeAddress, _create2Caller = CREATE_CALL_LIB) {
+function buildMPECDHDeployment(safeAddress, owners, _create2Caller = CREATE_CALL_LIB) {
   const bytecode = initBytecode(safeAddress)
-  const salt = calculateSalt(safeAddress)
+  const salt = calculateSalt(owners)
   // deterministic deployment via create2 using keccak256(safe) as salt
   const data = new ethers.Contract(_create2Caller, [
     'function performCreate2(uint256 value, bytes memory deploymentData, bytes32 salt) public returns (address newContract)'
@@ -97,7 +100,8 @@ async function proposeMPECDHDeployment(
   const _safeAddress = ethers.getAddress(safeAddress)
   const ethAdapter = new EthersAdapter({ ethers, signerOrProvider: signer })
   const safeSigner = await Safe.create({ ethAdapter, safeAddress: _safeAddress })
-  const safeTxData = buildMPECDHDeployment(_safeAddress, _create2Caller)
+  const owners = await getOwners(_safeAddress, provider)
+  const safeTxData = buildMPECDHDeployment(_safeAddress, owners, _create2Caller)
   const safeTx = await safeSigner.createTransaction({
     transactions: [safeTxData]
   })
@@ -209,11 +213,12 @@ async function mpecdh(mpecdhAddress, provider) {
 }
 
 async function getOwners(safeAddress, provider) {
-  return new ethers.Contract(
+  const result = await new ethers.Contract(
     safeAddress,
     ['function getOwners() public view returns (address[] memory)'],
     { provider }
   ).getOwners()
+  return Array.from(result)
 }
 
 module.exports = {

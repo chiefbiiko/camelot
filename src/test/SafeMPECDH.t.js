@@ -374,14 +374,14 @@ describe('SafeMPECDH', function () {
     const create2Caller = await createCallLib.getAddress()
 
     // calculate counterfactual create2 address
-    const create2Address = calcMPECDHAddress(safeAddress, create2Caller)
-
+    const owners = await getOwners(safeAddress, provider)
+    const create2Address = calcMPECDHAddress(safeAddress, owners, create2Caller)
     let deployedBytecode = await provider.getCode(create2Address)
     expect(deployedBytecode).eq('0x')
 
     // assemble and broadcast the create2 deployment tx
     // this corresponds to executing the Safe tx once it has been confirmed
-    const tx = buildMPECDHDeployment(safeAddress, create2Caller)
+    const tx = buildMPECDHDeployment(safeAddress, owners, create2Caller)
     await alice.sendTransaction(tx).then(res => res.wait())
 
     deployedBytecode = await provider.getCode(create2Address)
@@ -440,8 +440,9 @@ describe('SafeMPECDH', function () {
 
     const signers = [alice, bob, charlie]
     const safeAddress = await safeMock3.getAddress()
+    const owners = await getOwners(safeAddress, provider)
     const create2Caller = await createCallLib.getAddress()
-    const create2Address = calcMPECDHAddress(safeAddress, create2Caller)
+    const create2Address = calcMPECDHAddress(safeAddress, owners, create2Caller)
 
     let isDeployed = await isMPECDHDeployed(
       safeAddress,
@@ -452,7 +453,7 @@ describe('SafeMPECDH', function () {
     let isReady = await isMPECDHReady(safeAddress, provider, create2Caller)
     expect(isReady).to.be.false
 
-    const tx = buildMPECDHDeployment(safeAddress, create2Caller)
+    const tx = buildMPECDHDeployment(safeAddress, owners, create2Caller)
     await alice.sendTransaction(tx).then(res => res.wait())
 
     const choreo = await mpecdh(create2Address, provider)
