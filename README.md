@@ -26,15 +26,16 @@ impl. There is a concrete [`SafeMPECDH`](./src/SafeMPECDH.sol) contract for use 
 3. Then each signer can derive the shared secret separately (`stepX`)
 
 ```js
-const { calcMPECDHAddress, isMPECDHDeployed, isMPECDHReady, proposeMPECDHDeployment, mpecdh } = require("./src/index")
+const { calcMPECDHAddress, getOwners, isMPECDHDeployed, isMPECDHReady, proposeMPECDHDeployment, mpecdh } = require("./src/index")
 
-// in your dapp you will only have one ethers signer available but using 
-// three here to make the relation between number of rounds and signers clear
+// in your dapp you will only have one ethers signer available at a time but 
+// using three here 4 demo and to make the relation between number of rounds 
+// and signers clear
 const signers = [alice, bob, charlie] = await ethers.getSigners()
 
 const safeAddress = "some safe address"
 // we use create2 thru Safe's CreateCall lib for deterministic addresses
-const mpecdhAddress = calcMPECDHAddress(safeAddress)
+const mpecdhAddress = calcMPECDHAddress(safeAddress, await getOwners(safeAddress))
 const isDeployed = await isMPECDHDeployed(safeAddress)
 const isReady = await isMPECDHReady(safeAddress, provider)
 if (isDeployed && !isReady) {
