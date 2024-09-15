@@ -100,7 +100,7 @@ async function proposeMPECDHDeployment(
   const _safeAddress = ethers.getAddress(safeAddress)
   const ethAdapter = new EthersAdapter({ ethers, signerOrProvider: signer })
   const safeSigner = await Safe.create({ ethAdapter, safeAddress: _safeAddress })
-  const owners = await getOwners(_safeAddress, provider)
+  const owners = await getOwners(_safeAddress, signer.provider)
   const safeTxData = buildMPECDHDeployment(_safeAddress, owners, _create2Caller)
   const safeTx = await safeSigner.createTransaction({
     transactions: [safeTxData]
