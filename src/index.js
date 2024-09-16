@@ -190,7 +190,7 @@ async function mpecdh(mpecdhAddress, provider) {
     },
     async step0(signer) {
       const kp = await kdf(signer)
-      await _mpecdh.connect(signer).step(kp.publicKey)
+      return await _mpecdh.connect(signer).step(kp.publicKey)
     },
     async stepN(signer) {
       const [status, preKey] = await _mpecdh.prep(signer.address)
@@ -199,7 +199,7 @@ async function mpecdh(mpecdhAddress, provider) {
       }
       const kp = await kdf(signer)
       const newKey = scalarMult(kp.secretKey, preKey)
-      await _mpecdh.connect(signer).step(newKey)
+      return await _mpecdh.connect(signer).step(newKey)
     },
     async stepX(signer) {
       const [status, preKey] = await _mpecdh.prep(signer.address)
